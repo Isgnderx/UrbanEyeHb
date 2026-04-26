@@ -1,132 +1,137 @@
-graph TD
-%% ==================================================
-%% 1. USE CASE DIAGRAM
-%% ==================================================
-subgraph Use_Case_Diagram [Use Case Diagram]
-    direction TB
-    User((Urban Analyst))
-    CDSE_Actor((Copernicus CDSE))
-    Google_Actor((Google Maps API))
+# 🌍 Urban Anomaly Detection System
+### *AI-Assisted Satellite Imagery Analysis for Urban Preservation*
 
-    subgraph System_Boundary [Urban Anomaly Detection System]
-        UC1(Draw AOI on Map)
-        UC2(View Satellite Imagery)
-        UC3(Perform Change Detection)
-        UC4(View 3D Street/Terrain)
-        UC5(Authenticate with Copernicus)
+This project is an end-to-end solution for detecting urban changes and preservation risks using **Copernicus Sentinel-2** satellite data. Specifically optimized for the Baku region, it transforms raw spectral data into actionable insights through a seamless 2D/3D visualization interface.
+
+---
+
+## 🚀 Vision
+Cities evolve rapidly. Distinguishing between planned development and unauthorized anomalies that threaten environmental or historical heritage is critical. Our system automates this by performing time-series analysis on satellite imagery to visualize changes in seconds.
+
+---
+
+## 🏗️ Architectural Overview
+
+The system utilizes a **Decoupled Client-Server Architecture** to optimize security and performance. The backend acts as a secure "Gatekeeper" and Proxy, while the frontend handles heavy lifting for image processing and 3D rendering.
+
+```mermaid
+graph LR
+    subgraph Client_Side [Frontend - Browser]
+        UI[Leaflet.js Map]
+        AD[Analysis Engine - Pixel Comparison]
+        TD[Three.js 3D Viewer]
     end
 
-    User --> UC1
-    User --> UC2
-    User --> UC3
-    User --> UC4
-    UC2 -.->|include| UC5
-    UC5 --- CDSE_Actor
-    UC2 --- CDSE_Actor
-    UC4 --- Google_Actor
-end
-
-%% ==================================================
-%% 2. COMPONENT DIAGRAM
-%% ==================================================
-subgraph Component_Diagram [Component Diagram]
-    direction LR
-    subgraph Browser_Frontend [Frontend - Browser]
-        Index[index.html]
-        AppJS[scripts/app.js]
-        MapJS[scripts/map.js]
-        AnalysisJS[scripts/analysis.js]
-        Viewer3D[scripts/viewer3d.js]
-        ConfigJS[config.js]
+    subgraph Server_Side [FastAPI Backend]
+        Auth[Auth/Token Proxy]
+        ImageProxy[Copernicus Process API Proxy]
+        Cache[(In-Memory Token Cache)]
     end
 
-    subgraph FastAPI_Backend [Backend - FastAPI]
-        Main[app/main.py]
-        Endpoints[app/api/v1/endpoints]
-        CopSvc[app/services/copernicus_service.py]
-        CoreConfig[app/core/config.py]
+    subgraph External_APIs [External Data Providers]
+        Cop[Copernicus CDSE]
+        GMap[Google Street View]
     end
 
-    AppJS --> Index
-    AppJS --> MapJS
-    AppJS --> AnalysisJS
-    AnalysisJS --> Viewer3D
-    AnalysisJS -- "API_BASE_URL" --> Endpoints
-    Endpoints --> CopSvc
-    CopSvc --> CoreConfig
-end
+    UI --> Auth
+    AD --> ImageProxy
+    Auth --> Cache
+    ImageProxy --> Cop
+    TD --> GMap
+```
 
-%% ==================================================
-%% 3. CLASS DIAGRAM (BACKEND)
-%% ==================================================
-subgraph Backend_Class_Diagram [Backend Class Diagram]
-    direction TB
-    class FastAPIApp {
-        +cors_middleware
-        +include_router(auth)
-        +include_router(copernicus)
+
+---
+
+## 🛠️ Technical Stack
+
+### 🔹 Backend (Python & FastAPI)
+- **Security:** Obfuscates Copernicus `client_secret` from the client-side.
+- **Token Management:** Implements an in-memory caching strategy to reuse access tokens until expiry, drastically reducing latency.
+- **Router Pattern:** Standardized `/api/v1` structure for scalable endpoint management.
+
+### 🔹 Frontend (JavaScript & Geospatial)
+- **Mapping:** **Leaflet.js** for high-performance 2D map interaction and AOI (Area of Interest) drawing.
+- **Change Detection:** Custom `analysis.js` logic that compares multi-temporal pixels to identify clusters of change.
+- **Visualization:** A hybrid approach using **Three.js** for 3D terrain and **Google Street View** for ground-truth verification.
+
+---
+
+## 🔄 Core Workflow (Sequence Diagram)
+
+The journey from initial AOI selection to 3D anomaly validation:
+
+```mermaid
+sequenceDiagram
+    participant User as Urban Analyst
+    participant FE as Frontend (JS)
+    participant BE as FastAPI Backend
+    participant CDSE as Copernicus CDSE
+
+    User->>FE: Draw AOI on Map (Baku)
+    FE->>BE: Request Imagery (Before/After)
+    BE->>BE: Check Token Cache
+    alt Token Expired/None
+        BE->>CDSE: Auth (Client Credentials)
+        CDSE-->>BE: New JWT Token
+    end
+    BE->>CDSE: Fetch Sentinel-2 Tiles
+    CDSE-->>BE: Raw Imagery Data
+    BE-->>FE: Proxy Image Bytes
+    FE->>FE: Run Pixel-Wise Change Detection
+    FE-->>User: Display Heatmap & Anomaly Markers
+    User->>FE: Click Marker for 3D View
+    FE->>User: Launch Three.js Terrain + Street View
+```
+
+
+---
+
+## 📊 Decision Logic (Activity Diagram)
+
+Not every change is a "risk." The system intelligently filters anomalies based on predefined preservation zones.
+
+```mermaid
+stateDiagram-v2
+    [*] --> AOI_Selected
+    AOI_Selected --> Image_Fetch
+    Image_Fetch --> Comparison
+    Comparison --> Anomaly_Detected
+    
+    state Anomaly_Detected {
+        [*] --> Check_Zones
+        Check_Zones --> Risk_High: Inside Heritage/Preservation Zone
+        Check_Zones --> Risk_Low: Outside Sensitive Zone
     }
-    class Settings {
-        +CDSE_CLIENT_ID: str
-        +CDSE_CLIENT_SECRET: str
-        +CDSE_TOKEN_URL: str
-    }
-    class CopernicusService {
-        -token_cache: dict
-        +get_token()
-        +process_request(payload)
-        -is_token_expired()
-    }
-    class TokenResponse {
-        +access_token: str
-        +expires_in: int
-    }
+    
+    Risk_High --> Marker_Red
+    Risk_Low --> Marker_Yellow
+    Marker_Red --> User_Alert
+```
 
-    FastAPIApp --> Settings
-    FastAPIApp --> CopernicusService
-    CopernicusService ..> TokenResponse
-end
+---
 
-%% ==================================================
-%% 4. SEQUENCE DIAGRAM (MAIN FLOW)
-%% ==================================================
-subgraph Sequence_Main_Flow [Sequence: Main Detection Flow]
-    direction TB
-    sq_User[User] -->|Open App| sq_App[app.js]
-    sq_App -->|Init Map| sq_Map[map.js]
-    sq_User -->|Draw AOI| sq_Map
-    sq_Map -->|Coords| sq_Analysis[analysis.js]
-    sq_Analysis -->|Request Token| sq_BE[Backend API]
-    sq_BE -->|Proxy Request| sq_CDSE[Copernicus API]
-    sq_CDSE -->>|Imagery Data| sq_Analysis
-    sq_Analysis -->|Pixel Compare| sq_Analysis
-    sq_Analysis -->|Render Markers| sq_Map
-end
+## 💻 Setup & Installation
 
-%% ==================================================
-%% 5. ACTIVITY DIAGRAM (ANALYSIS)
-%% ==================================================
-subgraph Activity_Analysis [Activity: AOI Analysis]
-    direction TB
-    act_Start([Start]) --> act_Draw[User draws AOI]
-    act_Draw --> act_Req[Request Imagery T1 & T2]
-    act_Req --> act_Diff[Calculate Pixel Difference]
-    act_Diff --> act_Cluster[Cluster Anomalies]
-    act_Cluster --> act_Check{In Risk Zone?}
-    act_Check -- Yes --> act_Flag[Flag as Preservation Risk]
-    act_Check -- No --> act_Standard[Mark as Change]
-    act_Flag --> act_Render[Display Results]
-    act_Standard --> act_Render
-    act_Render --> act_End([End])
-end
+### Backend
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+# Configure .env with CDSE_CLIENT_ID and CDSE_CLIENT_SECRET
+uvicorn app.main:app --reload
+```
 
-%% ==================================================
-%% 6. DEPLOYMENT DIAGRAM
-%% ==================================================
-subgraph Deployment_Diagram [Deployment Diagram]
-    direction LR
-    node_User[User Device] -- HTTPS --> node_Static[Static Web Host]
-    node_User -- "API Calls" --> node_App[App Server / FastAPI]
-    node_App -- Proxy --> node_Cop[Copernicus CDSE]
-    node_User -- JS SDK --> node_Google[Google Maps API]
-end
+### Frontend
+The frontend is a static web application. Update the `API_BASE_URL` in `config.js` to point to your backend, then serve using any static web server (e.g., Live Server or Nginx).
+
+---
+
+## 🌟 Hackathon "Wow" Factors
+- **Zero Database Architecture:** Entirely event-driven and transient; no data persistence overhead.
+- **Secure Proxy Pattern:** Demonstrates industry-standard handling of sensitive API credentials.
+- **Multi-Dimensional Analysis:** Seamlessly transitions between 2D geospatial data and 3D street-level verification.
+
+---
+*Developed for the Urban Innovation Hackathon 2026.*
