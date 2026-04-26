@@ -1,20 +1,39 @@
 {
-    "rewrites": [
+    "version": 2,
+    "builds": [
         {
-            "source": "/config.js",
-            "destination": "/Front/config.js"
+            "src": "backend/api/index.py",
+            "use": "@vercel/python"
         },
         {
-            "source": "/styles/(.*)",
-            "destination": "/Front/styles/$1"
+            "src": "Front/**",
+            "use": "@vercel/static"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/(health|token)$",
+            "dest": "backend/api/index.py"
         },
         {
-            "source": "/scripts/(.*)",
-            "destination": "/Front/scripts/$1"
+            "src": "/api/v1/(.*)",
+            "dest": "backend/api/index.py"
         },
         {
-            "source": "/(.*)",
-            "destination": "/Front/index.html"
+            "src": "/config.js",
+            "dest": "/Front/config.js"
+        },
+        {
+            "src": "/styles/(.*)",
+            "dest": "/Front/styles/$1"
+        },
+        {
+            "src": "/scripts/(.*)",
+            "dest": "/Front/scripts/$1"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/Front/index.html"
         }
     ]
 }
