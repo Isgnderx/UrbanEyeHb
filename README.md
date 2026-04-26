@@ -128,10 +128,4 @@ The frontend is a static web application. Update the `API_BASE_URL` in `config.j
 
 ---
 
-## 🌟 Hackathon "Wow" Factors
-- **Zero Database Architecture:** Entirely event-driven and transient; no data persistence overhead.
-- **Secure Proxy Pattern:** Demonstrates industry-standard handling of sensitive API credentials.
-- **Multi-Dimensional Analysis:** Seamlessly transitions between 2D geospatial data and 3D street-level verification.
-
----
 *Developed for the Urban Innovation Hackathon 2026.*
