@@ -1,0 +1,382 @@
+[
+  {
+    "label": "mounts via Titanium brackets",
+    "source": "chassis_structure",
+    "target": "payload_deck_cfrm"
+  },
+  {
+    "label": "secured by",
+    "source": "payload_deck_cfrm",
+    "target": "titanium_brackets"
+  },
+  {
+    "label": "mounts to",
+    "source": "chassis_structure",
+    "target": "titanium_brackets"
+  },
+  {
+    "label": "mounts",
+    "source": "payload_deck_cfrm",
+    "target": "telescope_barrel"
+  },
+  {
+    "label": "mounts",
+    "source": "chassis_structure",
+    "target": "sar_antenna_hinge"
+  },
+  {
+    "label": "attaches to",
+    "source": "sar_antenna_hinge",
+    "target": "sar_antenna_module"
+  },
+  {
+    "label": "forms interface with",
+    "source": "chassis_structure",
+    "target": "cubesat_ejector_interface"
+  },
+  {
+    "label": "forms -Z face",
+    "source": "chassis_structure",
+    "target": "passive_radiator_panel"
+  },
+  {
+    "label": "receives heat from",
+    "source": "passive_radiator_panel",
+    "target": "fpa_conduction_strap"
+  },
+  {
+    "label": "connects to for cooling",
+    "source": "optical_fpa_detector",
+    "target": "fpa_conduction_strap"
+  },
+  {
+    "label": "covered by",
+    "source": "telescope_barrel",
+    "target": "mli_blankets_telescope"
+  },
+  {
+    "label": "covered by",
+    "source": "sar_electronics_module",
+    "target": "mli_blankets_sar_electronics"
+  },
+  {
+    "label": "attaches to +X face",
+    "source": "chassis_structure",
+    "target": "osr_panel_x_plus"
+  },
+  {
+    "label": "attaches to -X face",
+    "source": "chassis_structure",
+    "target": "osr_panel_x_minus"
+  },
+  {
+    "label": "houses",
+    "source": "telescope_barrel",
+    "target": "primary_mirror_m1"
+  },
+  {
+    "label": "houses",
+    "source": "telescope_barrel",
+    "target": "secondary_mirror_m2"
+  },
+  {
+    "label": "houses",
+    "source": "telescope_barrel",
+    "target": "tertiary_mirror_m3"
+  },
+  {
+    "label": "contains",
+    "source": "telescope_barrel",
+    "target": "telescope_baffles"
+  },
+  {
+    "label": "enclosed by",
+    "source": "ai_accelerator_jetson",
+    "target": "ai_shielding_vault_aluminum"
+  },
+  {
+    "label": "contains spot shielding",
+    "source": "ai_shielding_vault_aluminum",
+    "target": "ai_shielding_tantalum"
+  },
+  {
+    "label": "uses for board stacking",
+    "source": "chassis_structure",
+    "target": "pc104_spacers"
+  },
+  {
+    "label": "secured with",
+    "source": "chassis_structure",
+    "target": "fasteners_m3"
+  },
+  {
+    "label": "secured by",
+    "source": "chassis_structure",
+    "target": "deployment_inhibits"
+  },
+  {
+    "label": "mounts",
+    "source": "chassis_structure",
+    "target": "harness_routing_troughs"
+  },
+  {
+    "label": "attaches to",
+    "source": "solar_panel_1",
+    "target": "solar_array_hinge_assy_1"
+  },
+  {
+    "label": "attaches to",
+    "source": "solar_panel_2",
+    "target": "solar_array_hinge_assy_2"
+  },
+  {
+    "label": "attaches to",
+    "source": "solar_panel_3",
+    "target": "solar_array_hinge_assy_3"
+  },
+  {
+    "label": "attaches to",
+    "source": "solar_panel_4",
+    "target": "solar_array_hinge_assy_4"
+  },
+  {
+    "label": "body-mounted on",
+    "source": "chassis_structure",
+    "target": "solar_panel_5_fixed"
+  },
+  {
+    "label": "body-mounted on",
+    "source": "chassis_structure",
+    "target": "solar_panel_6_fixed"
+  },
+  {
+    "label": "mounts via PC/104 stack",
+    "source": "chassis_structure",
+    "target": "obc_q8s"
+  },
+  {
+    "label": "mounts via PC/104 stack",
+    "source": "chassis_structure",
+    "target": "mass_storage"
+  },
+  {
+    "label": "mounts via PC/104 stack",
+    "source": "chassis_structure",
+    "target": "adcs_controller_board"
+  },
+  {
+    "label": "mounts via PC/104 stack",
+    "source": "chassis_structure",
+    "target": "pcdu"
+  },
+  {
+    "label": "mounts securely within",
+    "source": "chassis_structure",
+    "target": "battery_pack"
+  },
+  {
+    "label": "mounts to internal panel",
+    "source": "chassis_structure",
+    "target": "imu_gyroscope"
+  },
+  {
+    "label": "mounts on +Y face",
+    "source": "chassis_structure",
+    "target": "star_tracker_y_plus"
+  },
+  {
+    "label": "mounts on -Y face",
+    "source": "chassis_structure",
+    "target": "star_tracker_y_minus"
+  },
+  {
+    "label": "mounts on +X face",
+    "source": "chassis_structure",
+    "target": "sun_sensor_x_plus"
+  },
+  {
+    "label": "mounts on -X face",
+    "source": "chassis_structure",
+    "target": "sun_sensor_x_minus"
+  },
+  {
+    "label": "mounts on +Y face",
+    "source": "chassis_structure",
+    "target": "sun_sensor_y_plus"
+  },
+  {
+    "label": "mounts on -Y face",
+    "source": "chassis_structure",
+    "target": "sun_sensor_y_minus"
+  },
+  {
+    "label": "mounts on +Z face",
+    "source": "chassis_structure",
+    "target": "sun_sensor_z_plus_coarse"
+  },
+  {
+    "label": "mounts on -Z face",
+    "source": "chassis_structure",
+    "target": "sun_sensor_z_minus_coarse"
+  },
+  {
+    "label": "mounts on +Z face",
+    "source": "chassis_structure",
+    "target": "sun_sensor_z_plus_fine"
+  },
+  {
+    "label": "mounts to internal panel",
+    "source": "chassis_structure",
+    "target": "magnetometer_1"
+  },
+  {
+    "label": "mounts to internal panel",
+    "source": "chassis_structure",
+    "target": "magnetometer_2"
+  },
+  {
+    "label": "mounts to internal frame",
+    "source": "chassis_structure",
+    "target": "reaction_wheel_1"
+  },
+  {
+    "label": "mounts to internal frame",
+    "source": "chassis_structure",
+    "target": "reaction_wheel_2"
+  },
+  {
+    "label": "mounts to internal frame",
+    "source": "chassis_structure",
+    "target": "reaction_wheel_3"
+  },
+  {
+    "label": "mounts to internal frame",
+    "source": "chassis_structure",
+    "target": "reaction_wheel_4"
+  },
+  {
+    "label": "mounts to internal frame",
+    "source": "chassis_structure",
+    "target": "magnetorquer_x"
+  },
+  {
+    "label": "mounts to internal frame",
+    "source": "chassis_structure",
+    "target": "magnetorquer_y"
+  },
+  {
+    "label": "mounts to internal frame",
+    "source": "chassis_structure",
+    "target": "magnetorquer_z"
+  },
+  {
+    "label": "mounts to internal panel",
+    "source": "chassis_structure",
+    "target": "x_band_transmitter"
+  },
+  {
+    "label": "mounts to external panel",
+    "source": "chassis_structure",
+    "target": "x_band_antenna"
+  },
+  {
+    "label": "mounts to internal panel",
+    "source": "chassis_structure",
+    "target": "s_band_ttc_module"
+  },
+  {
+    "label": "mounts on +Z face",
+    "source": "chassis_structure",
+    "target": "s_band_antenna_z_plus"
+  },
+  {
+    "label": "mounts on -Z face",
+    "source": "chassis_structure",
+    "target": "s_band_antenna_z_minus"
+  },
+  {
+    "label": "adheres to",
+    "source": "battery_pack",
+    "target": "battery_heater_mat_1"
+  },
+  {
+    "label": "adheres to",
+    "source": "battery_pack",
+    "target": "battery_heater_mat_2"
+  },
+  {
+    "label": "mounts to",
+    "source": "chassis_structure",
+    "target": "temp_sensor_node_1"
+  },
+  {
+    "label": "mounts to",
+    "source": "chassis_structure",
+    "target": "temp_sensor_node_2"
+  },
+  {
+    "label": "mounts to",
+    "source": "chassis_structure",
+    "target": "temp_sensor_node_3"
+  },
+  {
+    "label": "mounts to",
+    "source": "chassis_structure",
+    "target": "temp_sensor_node_4"
+  },
+  {
+    "label": "mounts to",
+    "source": "chassis_structure",
+    "target": "temp_sensor_node_5"
+  },
+  {
+    "label": "mounts to",
+    "source": "chassis_structure",
+    "target": "temp_sensor_node_6"
+  },
+  {
+    "label": "actuated by",
+    "source": "solar_array_hinge_assy_1",
+    "target": "deployment_actuator_sa1"
+  },
+  {
+    "label": "actuated by",
+    "source": "solar_array_hinge_assy_2",
+    "target": "deployment_actuator_sa2"
+  },
+  {
+    "label": "actuated by",
+    "source": "solar_array_hinge_assy_3",
+    "target": "deployment_actuator_sa3"
+  },
+  {
+    "label": "actuated by",
+    "source": "solar_array_hinge_assy_4",
+    "target": "deployment_actuator_sa4"
+  },
+  {
+    "label": "actuated by",
+    "source": "sar_antenna_hinge",
+    "target": "deployment_actuator_sar"
+  },
+  {
+    "source": "chassis_structure",
+    "target": "bus_28v_unreg",
+    "label": "mounts to internal panel"
+  },
+  {
+    "source": "chassis_structure",
+    "target": "bus_12v_reg",
+    "label": "mounts to internal panel"
+  },
+  {
+    "source": "chassis_structure",
+    "target": "bus_5v_reg",
+    "label": "mounts to internal panel"
+  },
+  {
+    "source": "chassis_structure",
+    "target": "bus_3_3v_reg",
+    "label": "mounts to internal panel"
+  }
+]

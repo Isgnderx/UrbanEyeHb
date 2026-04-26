@@ -1,0 +1,742 @@
+[
+  {
+    "type": "power",
+    "source": "solar_panel_1",
+    "target": "pcdu",
+    "voltage": "V_array"
+  },
+  {
+    "type": "power",
+    "source": "solar_panel_2",
+    "target": "pcdu",
+    "voltage": "V_array"
+  },
+  {
+    "type": "power",
+    "source": "solar_panel_3",
+    "target": "pcdu",
+    "voltage": "V_array"
+  },
+  {
+    "type": "power",
+    "source": "solar_panel_4",
+    "target": "pcdu",
+    "voltage": "V_array"
+  },
+  {
+    "type": "power",
+    "source": "solar_panel_5_fixed",
+    "target": "pcdu",
+    "voltage": "V_array"
+  },
+  {
+    "type": "power",
+    "source": "solar_panel_6_fixed",
+    "target": "pcdu",
+    "voltage": "V_array"
+  },
+  {
+    "type": "power",
+    "source": "battery_pack",
+    "target": "pcdu",
+    "voltage": "7.4V or 14.8V"
+  },
+  {
+    "type": "power",
+    "source": "pcdu",
+    "target": "battery_pack",
+    "voltage": "Charge V"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "ai_accelerator_jetson",
+    "protocol": "PCIe Gen3 x4"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "mass_storage",
+    "protocol": "SpaceWire x2"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "mass_storage",
+    "protocol": "SPI NOR",
+    "sourcePin": "SPI",
+    "targetPin": "SPI NOR"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "x_band_transmitter",
+    "protocol": "SpaceWire or GbE"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "s_band_ttc_module",
+    "protocol": "CAN 2.0B",
+    "sourcePin": "CAN",
+    "targetPin": "CAN"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "adcs_controller_board",
+    "protocol": "CAN 2.0B",
+    "sourcePin": "CAN",
+    "targetPin": "CAN"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "pcdu",
+    "protocol": "CAN 2.0B",
+    "sourcePin": "CAN",
+    "targetPin": "CAN"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "star_tracker_y_plus",
+    "protocol": "RS-422",
+    "sourcePin": "RS-422",
+    "targetPin": "RS-422"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "star_tracker_y_minus",
+    "protocol": "RS-422",
+    "sourcePin": "RS-422",
+    "targetPin": "RS-422"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "imu_gyroscope",
+    "protocol": "SPI",
+    "sourcePin": "SPI",
+    "targetPin": "SPI"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "sun_sensor_x_plus",
+    "protocol": "I2C",
+    "sourcePin": "I2C",
+    "targetPin": "I2C"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "sun_sensor_x_minus",
+    "protocol": "I2C",
+    "sourcePin": "I2C",
+    "targetPin": "I2C"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "sun_sensor_y_plus",
+    "protocol": "I2C",
+    "sourcePin": "I2C",
+    "targetPin": "I2C"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "sun_sensor_y_minus",
+    "protocol": "I2C",
+    "sourcePin": "I2C",
+    "targetPin": "I2C"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "sun_sensor_z_plus_coarse",
+    "protocol": "I2C",
+    "sourcePin": "I2C",
+    "targetPin": "I2C"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "sun_sensor_z_minus_coarse",
+    "protocol": "I2C",
+    "sourcePin": "I2C",
+    "targetPin": "I2C"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "sun_sensor_z_plus_fine",
+    "protocol": "I2C",
+    "sourcePin": "I2C",
+    "targetPin": "I2C"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "magnetometer_1",
+    "protocol": "I2C",
+    "sourcePin": "I2C",
+    "targetPin": "I2C"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "magnetometer_2",
+    "protocol": "I2C",
+    "sourcePin": "I2C",
+    "targetPin": "I2C"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "temp_sensor_node_1",
+    "protocol": "I2C",
+    "sourcePin": "I2C",
+    "targetPin": "I2C"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "temp_sensor_node_2",
+    "protocol": "I2C",
+    "sourcePin": "I2C",
+    "targetPin": "I2C"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "temp_sensor_node_3",
+    "protocol": "I2C",
+    "sourcePin": "I2C",
+    "targetPin": "I2C"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "temp_sensor_node_4",
+    "protocol": "I2C",
+    "sourcePin": "I2C",
+    "targetPin": "I2C"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "temp_sensor_node_5",
+    "protocol": "I2C",
+    "sourcePin": "I2C",
+    "targetPin": "I2C"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "temp_sensor_node_6",
+    "protocol": "I2C",
+    "sourcePin": "I2C",
+    "targetPin": "I2C"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "sar_electronics_module",
+    "protocol": "SpaceWire"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "sar_electronics_module",
+    "protocol": "SPI"
+  },
+  {
+    "type": "data",
+    "source": "obc_q8s",
+    "target": "sar_antenna_module",
+    "protocol": "I2C/SPI",
+    "sourcePin": "I2C/SPI",
+    "targetPin": "Control (SPI/I2C)"
+  },
+  {
+    "type": "data",
+    "source": "adcs_controller_board",
+    "target": "reaction_wheel_1",
+    "protocol": "RS-422",
+    "sourcePin": "RS-422",
+    "targetPin": "RS-422"
+  },
+  {
+    "type": "data",
+    "source": "adcs_controller_board",
+    "target": "reaction_wheel_2",
+    "protocol": "RS-422",
+    "sourcePin": "RS-422",
+    "targetPin": "RS-422"
+  },
+  {
+    "type": "data",
+    "source": "adcs_controller_board",
+    "target": "reaction_wheel_3",
+    "protocol": "RS-422",
+    "sourcePin": "RS-422",
+    "targetPin": "RS-422"
+  },
+  {
+    "type": "data",
+    "source": "adcs_controller_board",
+    "target": "reaction_wheel_4",
+    "protocol": "RS-422",
+    "sourcePin": "RS-422",
+    "targetPin": "RS-422"
+  },
+  {
+    "type": "data",
+    "source": "adcs_controller_board",
+    "target": "magnetorquer_x",
+    "protocol": "PWM",
+    "sourcePin": "PWM Out",
+    "targetPin": "PWM Drive"
+  },
+  {
+    "type": "data",
+    "source": "adcs_controller_board",
+    "target": "magnetorquer_y",
+    "protocol": "PWM",
+    "sourcePin": "PWM Out",
+    "targetPin": "PWM Drive"
+  },
+  {
+    "type": "data",
+    "source": "adcs_controller_board",
+    "target": "magnetorquer_z",
+    "protocol": "PWM",
+    "sourcePin": "PWM Out",
+    "targetPin": "PWM Drive"
+  },
+  {
+    "type": "data",
+    "source": "optical_fpa_detector",
+    "target": "obc_q8s",
+    "protocol": "LVDS Camera Link HS"
+  },
+  {
+    "type": "data",
+    "source": "x_band_transmitter",
+    "target": "x_band_antenna",
+    "protocol": "RF",
+    "sourcePin": "RF Out",
+    "targetPin": "RF In"
+  },
+  {
+    "type": "data",
+    "source": "s_band_ttc_module",
+    "target": "s_band_antenna_z_plus",
+    "protocol": "RF",
+    "sourcePin": "RF Out/In",
+    "targetPin": "RF In/Out"
+  },
+  {
+    "type": "data",
+    "source": "s_band_ttc_module",
+    "target": "s_band_antenna_z_minus",
+    "protocol": "RF",
+    "sourcePin": "RF Out/In",
+    "targetPin": "RF In/Out"
+  },
+  {
+    "source": "pcdu",
+    "target": "bus_28v_unreg",
+    "type": "power",
+    "sourcePin": "28V Out (x2 switched)",
+    "targetPin": "28V In",
+    "voltage": "28V"
+  },
+  {
+    "source": "pcdu",
+    "target": "bus_12v_reg",
+    "type": "power",
+    "sourcePin": "12V Out",
+    "targetPin": "12V In",
+    "voltage": "12V"
+  },
+  {
+    "source": "pcdu",
+    "target": "bus_5v_reg",
+    "type": "power",
+    "sourcePin": "5V Out",
+    "targetPin": "5V In",
+    "voltage": "5V"
+  },
+  {
+    "source": "pcdu",
+    "target": "bus_3_3v_reg",
+    "type": "power",
+    "sourcePin": "3.3V Out",
+    "targetPin": "3.3V In",
+    "voltage": "3.3V"
+  },
+  {
+    "source": "bus_12v_reg",
+    "target": "obc_q8s",
+    "type": "power",
+    "sourcePin": "12V Out",
+    "targetPin": "Power 12V",
+    "voltage": "12V"
+  },
+  {
+    "source": "bus_5v_reg",
+    "target": "obc_q8s",
+    "type": "power",
+    "sourcePin": "5V Out",
+    "targetPin": "Power 5V",
+    "voltage": "5V"
+  },
+  {
+    "source": "bus_3_3v_reg",
+    "target": "obc_q8s",
+    "type": "power",
+    "sourcePin": "3.3V Out",
+    "targetPin": "Power 3.3V",
+    "voltage": "3.3V"
+  },
+  {
+    "source": "bus_28v_unreg",
+    "target": "ai_accelerator_jetson",
+    "type": "power",
+    "sourcePin": "28V Out",
+    "targetPin": "Power 28V",
+    "voltage": "28V"
+  },
+  {
+    "source": "bus_3_3v_reg",
+    "target": "mass_storage",
+    "type": "power",
+    "sourcePin": "3.3V Out",
+    "targetPin": "Power 3.3V",
+    "voltage": "3.3V"
+  },
+  {
+    "source": "bus_3_3v_reg",
+    "target": "optical_fpa_detector",
+    "type": "power",
+    "sourcePin": "3.3V Out",
+    "targetPin": "Power 3.3V",
+    "voltage": "3.3V"
+  },
+  {
+    "source": "bus_5v_reg",
+    "target": "optical_fpa_detector",
+    "type": "power",
+    "sourcePin": "5V Out",
+    "targetPin": "Power 5V",
+    "voltage": "5V"
+  },
+  {
+    "source": "bus_28v_unreg",
+    "target": "sar_electronics_module",
+    "type": "power",
+    "sourcePin": "28V Out",
+    "targetPin": "Power 28V",
+    "voltage": "28V"
+  },
+  {
+    "source": "bus_5v_reg",
+    "target": "sar_electronics_module",
+    "type": "power",
+    "sourcePin": "5V Out",
+    "targetPin": "Power 5V",
+    "voltage": "5V"
+  },
+  {
+    "source": "bus_5v_reg",
+    "target": "sar_antenna_module",
+    "type": "power",
+    "sourcePin": "5V Out",
+    "targetPin": "Power 5V",
+    "voltage": "5V"
+  },
+  {
+    "source": "bus_5v_reg",
+    "target": "star_tracker_y_plus",
+    "type": "power",
+    "sourcePin": "5V Out",
+    "targetPin": "Power 5V",
+    "voltage": "5V"
+  },
+  {
+    "source": "bus_5v_reg",
+    "target": "star_tracker_y_minus",
+    "type": "power",
+    "sourcePin": "5V Out",
+    "targetPin": "Power 5V",
+    "voltage": "5V"
+  },
+  {
+    "source": "bus_3_3v_reg",
+    "target": "imu_gyroscope",
+    "type": "power",
+    "sourcePin": "3.3V Out",
+    "targetPin": "Power 3.3V",
+    "voltage": "3.3V"
+  },
+  {
+    "source": "bus_3_3v_reg",
+    "target": "sun_sensor_x_plus",
+    "type": "power",
+    "sourcePin": "3.3V Out",
+    "targetPin": "Power 3.3V",
+    "voltage": "3.3V"
+  },
+  {
+    "source": "bus_3_3v_reg",
+    "target": "sun_sensor_x_minus",
+    "type": "power",
+    "sourcePin": "3.3V Out",
+    "targetPin": "Power 3.3V",
+    "voltage": "3.3V"
+  },
+  {
+    "source": "bus_3_3v_reg",
+    "target": "sun_sensor_y_plus",
+    "type": "power",
+    "sourcePin": "3.3V Out",
+    "targetPin": "Power 3.3V",
+    "voltage": "3.3V"
+  },
+  {
+    "source": "bus_3_3v_reg",
+    "target": "sun_sensor_y_minus",
+    "type": "power",
+    "sourcePin": "3.3V Out",
+    "targetPin": "Power 3.3V",
+    "voltage": "3.3V"
+  },
+  {
+    "source": "bus_3_3v_reg",
+    "target": "sun_sensor_z_plus_coarse",
+    "type": "power",
+    "sourcePin": "3.3V Out",
+    "targetPin": "Power 3.3V",
+    "voltage": "3.3V"
+  },
+  {
+    "source": "bus_3_3v_reg",
+    "target": "sun_sensor_z_minus_coarse",
+    "type": "power",
+    "sourcePin": "3.3V Out",
+    "targetPin": "Power 3.3V",
+    "voltage": "3.3V"
+  },
+  {
+    "source": "bus_3_3v_reg",
+    "target": "sun_sensor_z_plus_fine",
+    "type": "power",
+    "sourcePin": "3.3V Out",
+    "targetPin": "Power 3.3V",
+    "voltage": "3.3V"
+  },
+  {
+    "source": "bus_3_3v_reg",
+    "target": "magnetometer_1",
+    "type": "power",
+    "sourcePin": "3.3V Out",
+    "targetPin": "Power 3.3V",
+    "voltage": "3.3V"
+  },
+  {
+    "source": "bus_3_3v_reg",
+    "target": "magnetometer_2",
+    "type": "power",
+    "sourcePin": "3.3V Out",
+    "targetPin": "Power 3.3V",
+    "voltage": "3.3V"
+  },
+  {
+    "source": "bus_12v_reg",
+    "target": "reaction_wheel_1",
+    "type": "power",
+    "sourcePin": "12V Out",
+    "targetPin": "Power 12V",
+    "voltage": "12V"
+  },
+  {
+    "source": "bus_12v_reg",
+    "target": "reaction_wheel_2",
+    "type": "power",
+    "sourcePin": "12V Out",
+    "targetPin": "Power 12V",
+    "voltage": "12V"
+  },
+  {
+    "source": "bus_12v_reg",
+    "target": "reaction_wheel_3",
+    "type": "power",
+    "sourcePin": "12V Out",
+    "targetPin": "Power 12V",
+    "voltage": "12V"
+  },
+  {
+    "source": "bus_12v_reg",
+    "target": "reaction_wheel_4",
+    "type": "power",
+    "sourcePin": "12V Out",
+    "targetPin": "Power 12V",
+    "voltage": "12V"
+  },
+  {
+    "source": "bus_5v_reg",
+    "target": "magnetorquer_x",
+    "type": "power",
+    "sourcePin": "5V Out",
+    "targetPin": "Power 5V",
+    "voltage": "5V"
+  },
+  {
+    "source": "bus_5v_reg",
+    "target": "magnetorquer_y",
+    "type": "power",
+    "sourcePin": "5V Out",
+    "targetPin": "Power 5V",
+    "voltage": "5V"
+  },
+  {
+    "source": "bus_5v_reg",
+    "target": "magnetorquer_z",
+    "type": "power",
+    "sourcePin": "5V Out",
+    "targetPin": "Power 5V",
+    "voltage": "5V"
+  },
+  {
+    "source": "bus_5v_reg",
+    "target": "adcs_controller_board",
+    "type": "power",
+    "sourcePin": "5V Out",
+    "targetPin": "Power 5V",
+    "voltage": "5V"
+  },
+  {
+    "source": "bus_28v_unreg",
+    "target": "x_band_transmitter",
+    "type": "power",
+    "sourcePin": "28V Out",
+    "targetPin": "Power 28V",
+    "voltage": "28V"
+  },
+  {
+    "source": "bus_5v_reg",
+    "target": "s_band_ttc_module",
+    "type": "power",
+    "sourcePin": "5V Out",
+    "targetPin": "Power 5V",
+    "voltage": "5V"
+  },
+  {
+    "source": "bus_28v_unreg",
+    "target": "battery_heater_mat_1",
+    "type": "power",
+    "sourcePin": "28V Out",
+    "targetPin": "Power 28V (Switched)",
+    "voltage": "28V"
+  },
+  {
+    "source": "bus_28v_unreg",
+    "target": "battery_heater_mat_2",
+    "type": "power",
+    "sourcePin": "28V Out",
+    "targetPin": "Power 28V (Switched)",
+    "voltage": "28V"
+  },
+  {
+    "source": "bus_3_3v_reg",
+    "target": "temp_sensor_node_1",
+    "type": "power",
+    "sourcePin": "3.3V Out",
+    "targetPin": "Power 3.3V",
+    "voltage": "3.3V"
+  },
+  {
+    "source": "bus_3_3v_reg",
+    "target": "temp_sensor_node_2",
+    "type": "power",
+    "sourcePin": "3.3V Out",
+    "targetPin": "Power 3.3V",
+    "voltage": "3.3V"
+  },
+  {
+    "source": "bus_3_3v_reg",
+    "target": "temp_sensor_node_3",
+    "type": "power",
+    "sourcePin": "3.3V Out",
+    "targetPin": "Power 3.3V",
+    "voltage": "3.3V"
+  },
+  {
+    "source": "bus_3_3v_reg",
+    "target": "temp_sensor_node_4",
+    "type": "power",
+    "sourcePin": "3.3V Out",
+    "targetPin": "Power 3.3V",
+    "voltage": "3.3V"
+  },
+  {
+    "source": "bus_3_3v_reg",
+    "target": "temp_sensor_node_5",
+    "type": "power",
+    "sourcePin": "3.3V Out",
+    "targetPin": "Power 3.3V",
+    "voltage": "3.3V"
+  },
+  {
+    "source": "bus_3_3v_reg",
+    "target": "temp_sensor_node_6",
+    "type": "power",
+    "sourcePin": "3.3V Out",
+    "targetPin": "Power 3.3V",
+    "voltage": "3.3V"
+  },
+  {
+    "source": "bus_5v_reg",
+    "target": "deployment_actuator_sa1",
+    "type": "power",
+    "sourcePin": "5V Out",
+    "targetPin": "Power 5V (Switched)",
+    "voltage": "5V"
+  },
+  {
+    "source": "bus_5v_reg",
+    "target": "deployment_actuator_sa2",
+    "type": "power",
+    "sourcePin": "5V Out",
+    "targetPin": "Power 5V (Switched)",
+    "voltage": "5V"
+  },
+  {
+    "source": "bus_5v_reg",
+    "target": "deployment_actuator_sa3",
+    "type": "power",
+    "sourcePin": "5V Out",
+    "targetPin": "Power 5V (Switched)",
+    "voltage": "5V"
+  },
+  {
+    "source": "bus_5v_reg",
+    "target": "deployment_actuator_sa4",
+    "type": "power",
+    "sourcePin": "5V Out",
+    "targetPin": "Power 5V (Switched)",
+    "voltage": "5V"
+  },
+  {
+    "source": "bus_5v_reg",
+    "target": "deployment_actuator_sar",
+    "type": "power",
+    "sourcePin": "5V Out",
+    "targetPin": "Power 5V (Switched)",
+    "voltage": "5V"
+  }
+]
