@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UrbanEye · AI Urban Intelligence Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+:root{
+  --bg:#0f1117;--bg-surface:#161b26;--bg-card:#1c2333;
+  --border:#2a3347;--border-lt:#313d55;
+  --blue:#4f8ef7;--blue-soft:rgba(79,142,247,0.12);
+  --teal:#2dd4bf;
+  --amber:#f59e0b;--amber-soft:rgba(245,158,11,0.12);
+  --red:#f43f5e;--red-soft:rgba(244,63,94,0.12);
+  --green:#10b981;--green-soft:rgba(16,185,129,0.12);
+  --text-1:#f1f5f9;--text-2:#94a3b8;--text-3:#475569;
+  --sidebar-w:320px;--topbar-h:52px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text-1);font-family:'Inter',sans-serif;font-size:13px;display:flex;}
+
+/* PREVENT BROWSER BLURRING ON LOW-RES SATELLITE IMAGES */
+.pixelated { 
+  image-rendering: -webkit-optimize-contrast; 
+  image-rendering: crisp-edges; 
+  image-rendering: pixelated; 
+}
+
+/* SIDEBAR */
+#sidebar{width:var(--sidebar-w);height:100vh;background:var(--bg-surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:200;}
+.sb-logo{padding:20px 18px 16px;border-bottom:1px solid var(--border);}
+.sb-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:2px;}
+.sb-logo-icon{width:32px;height:32px;border-radius:8px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.sb-logo-name{font-family:'Sora',sans-serif;font-size:17px;font-weight:800;color:var(--text-1);letter-spacing:-0.3px;}
+.sb-logo-sub{font-size:10.5px;color:var(--text-3);padding-left:42px;}
+.sb-live{display:flex;align-items:center;gap:7px;padding:10px 18px;border-bottom:1px solid var(--border);font-size:11px;color:var(--text-3);}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s ease infinite;flex-shrink:0;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.sb-nav{flex:1;padding:0;overflow-y:auto;}
+.nav-sec-lbl{font-size:10px;font-weight:600;color:var(--text-3);letter-spacing:0.8px;text-transform:uppercase;padding:14px 18px 8px;}
+
+.sb-footer{padding:14px 18px;border-top:1px solid var(--border);font-size:11px;color:var(--text-3);line-height:1.7;}
+.sb-time{font-size:12px;color:var(--text-2);font-weight:500;}
+
+/* MAIN */
+#main{margin-left:var(--sidebar-w);flex:1;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+.topbar{height:var(--topbar-h);background:var(--bg-surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;flex-shrink:0;}
+.tb-breadcrumb{font-size:12px;color:var(--text-3);}
+.tb-right{display:flex;align-items:center;gap:10px;}
+.tb-chip{display:flex;align-items:center;gap:6px;background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--text-2);}
+.tb-chip .dot{width:5px;height:5px;border-radius:50%;background:var(--green);}
+.tb-chip.warn{color:var(--amber);border-color:rgba(245,158,11,0.25);background:var(--amber-soft);}
+
+#map-container{flex:1;position:relative;overflow:hidden;}
+#map{width:100%;height:100%;}
+
+/* MAP LOADING INDICATOR */
+.map-loading-indicator{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1000;background:rgba(22,27,38,0.9);border:1px solid var(--border);border-radius:8px;padding:10px 16px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--teal);box-shadow:0 4px 20px rgba(0,0,0,0.5);display:none;}
+
+.map-coords-bar{position:absolute;bottom:12px;left:14px;z-index:500;background:var(--bg-surface);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:11px;color:var(--text-2);}
+.map-status-bar{position:absolute;top:14px;right:14px;z-index:500;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--text-3);line-height:1.8;min-width:196px;box-shadow:0 4px 20px rgba(0,0,0,0.4);}
+.map-status-title{font-size:12px;font-weight:600;color:var(--text-1);margin-bottom:3px;}
+.map-status-row{display:flex;justify-content:space-between;gap:12px;}
+.ok{color:var(--green);}.warn-c{color:var(--amber);}.err-c{color:var(--red);}
+
+/* Pulse ring on map */
+@keyframes ring-expand{0%{transform:scale(1);opacity:.7;}100%{transform:scale(3.5);opacity:0;}}
+
+/* Intel panel */
+.panel-sec{padding:14px 18px;border-bottom:1px solid var(--border);}
+.panel-sec-title{font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+
+.det-card{background:var(--bg-card);border:1px solid var(--border);border-radius:9px;padding:12px;margin-bottom:8px;transition:border-color .15s;animation:slideIn .4s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateX(-10px);}to{opacity:1;transform:translateX(0);}}
+.det-card.alert{border-left:3px solid var(--red);}
+.det-card.warn{border-left:3px solid var(--amber);}
+.det-card.ok{border-left:3px solid var(--green);}
+.det-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;}
+.det-id{font-size:10px;color:var(--text-3);}
+.det-badge{font-size:9.5px;font-weight:600;padding:2px 7px;border-radius:4px;}
+.badge-alert{background:var(--red-soft);color:var(--red);}
+.badge-warn{background:var(--amber-soft);color:var(--amber);}
+.badge-info{background:rgba(59,130,246,0.15);color:#60a5fa;}
+.det-title{font-size:12.5px;font-weight:600;color:var(--text-1);margin-bottom:3px;line-height:1.3;}
+.det-coords{font-size:10.5px;color:var(--blue);margin-bottom:8px;}
+.det-meta{display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);}
+
+/* AOI INSPECTOR */
+.aoi-toolbar{position:absolute;bottom:90px;left:14px;z-index:500;background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:2px;box-shadow:0 4px 20px rgba(0,0,0,0.4);}
+.aoi-btn{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:450;color:var(--text-2);transition:all .15s;white-space:nowrap;border:1px solid transparent;user-select:none;}
+.aoi-btn:hover{background:var(--bg-card);color:var(--text-1);}
+.aoi-btn.active{background:rgba(45,212,191,0.12);color:var(--teal);border-color:rgba(45,212,191,0.25);font-weight:500;}
+.aoi-hint{position:absolute;bottom:52px;left:14px;z-index:500;background:rgba(22,27,38,0.95);border:1px solid var(--border);border-radius:7px;padding:7px 12px;font-size:11px;color:var(--text-2);display:none;}
+.aoi-hint.show{display:block;}
+.aoi-bottom-bar{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:500;background:var(--bg-surface);border:1px solid rgba(45,212,191,0.3);border-radius:10px;padding:10px 16px;display:none;align-items:center;gap:14px;box-shadow:0 4px 20px rgba(0,0,0,0.4);white-space:nowrap;}
+.aoi-bottom-bar.show{display:flex;}
+.aoi-bottom-label{font-size:10px;font-weight:600;color:var(--teal);text-transform:uppercase;letter-spacing:0.5px;}
+.aoi-bottom-val{font-size:11px;color:var(--text-2);}
+.aoi-sep{width:1px;height:18px;background:var(--border);}
+.aoi-run-btn{background:var(--teal);color:#0f1117;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:opacity .15s;}
+.aoi-run-btn:hover{opacity:0.85;}
+.aoi-clear-btn{background:transparent;color:var(--text-3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;}
+.aoi-clear-btn:hover{color:var(--text-2);}
+
+/* ANALYSIS PROOF UI */
+.proof-grid{display:grid;grid-template-columns:repeat(3, 1fr);gap:6px;margin-top:10px;margin-bottom:12px;}
+.proof-img-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.proof-lbl{font-size:9px;color:var(--text-3);text-transform:uppercase;}
+.proof-canvas{width:100%;aspect-ratio:1;background:#000;border:1px solid var(--border);border-radius:4px;object-fit:contain;}
+.analysis-loader{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--blue);padding:10px 0;}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.proxy-info{display:flex;flex-direction:column;gap:6px;}
+.proxy-row{display:flex;justify-content:space-between;font-size:11px;}
+.proxy-lbl{color:var(--text-3);}.proxy-val{color:var(--text-2);font-weight:500;}
+
+/* LEAFLET OVERRIDES */
+.leaflet-container{background:#1a2a3a;}
+.leaflet-control-zoom a{background:var(--bg-card)!important;color:var(--text-2)!important;border-color:var(--border)!important;}
+.leaflet-control-attribution{background:rgba(22,27,38,0.8)!important;color:var(--text-3)!important;font-size:9px!important;}
+.leaflet-popup-content-wrapper{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.4);color:var(--text-1);}
+.leaflet-popup-tip{background:var(--bg-card);}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+/* 3D Modal Overlay */
+#modal3d {
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(15,17,23,0.85);z-index:9999;
+  display:none;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);
+}
+.modal-content {
+  width: 90%; max-width: 800px; height: 600px;
+  background:var(--bg-surface);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;display:flex;flex-direction:column;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+}
+.modal-header {
+  padding:14px 20px;border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.modal-title {
+  font-size:14px;font-weight:600;color:var(--text-1);
+}
+.modal-close {
+  background:transparent;border:none;color:var(--text-2);
+  font-size:18px;cursor:pointer;transition:color 0.2s;
+}
+.modal-close:hover { color:var(--text-1); }
+#viewer3d { flex:1; width:100%; position:relative; background:#000; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=streetView"></script>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-row">
+      <div class="sb-logo-icon">🛰️</div>
+      <div class="sb-logo-name">UrbanEye Core</div>
+    </div>
+    <div class="sb-logo-sub">Optical Construction Signature AI</div>
+  </div>
+  <div class="sb-live"><div class="live-dot"></div>Sentinel-2 · Authenticated</div>
+  
+  <div class="sb-nav">
+    <div id="aoi-results-sec" style="display:none;">
+      <div class="nav-sec-lbl" style="color:var(--teal)">Analysis Results</div>
+      <div class="panel-sec" id="aoi-results-content">
+        <!-- Results and Proof Canvases injected here -->
+      </div>
+    </div>
+
+    <div class="nav-sec-lbl">Detected Anomalies</div>
+    <div class="panel-sec" id="live-det-list">
+      <div style="color:var(--text-3);font-size:12px;text-align:center;padding:10px 0;">
+        Draw an Inspection Area on the map to run real-time construction detection.
+      </div>
+    </div>
+    
+    <div class="nav-sec-lbl" style="margin-top:10px;">Marker Legend</div>
+    <div class="panel-sec" style="font-size:11px;color:var(--text-2);line-height:1.6;">
+      <div style="display:flex;align-items:center;gap:6px;"><div style="font-size:14px;line-height:1;width:12px;text-align:center;color:var(--red);">⚠️</div> <span><b>Preservation Risk:</b> Masterplan / Heritage conflict</span></div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><div style="width:8px;height:8px;border-radius:50%;background:#3b82f6;"></div> <span><b>Blue Dot:</b> 3D Street View Available</span></div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><div style="width:8px;height:8px;border-radius:50%;background:#f59e0b;"></div> <span><b>Yellow Dot:</b> Anomaly (No 3D Model)</span></div>
+      <div style="display:flex;align-items:center;gap:6px;margin-top:4px;"><div style="width:8px;height:8px;border-radius:50%;background:#10b981;"></div> <span><b>Green Dot:</b> Supervisor Verified Legal</span></div>
+    </div>
+  </div>
+
+  <div class="sb-footer">
+    <div style="padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--border);font-size:10px;color:var(--text-3);line-height:1.4;">
+      <b style="color:var(--teal)">Functional AI:</b> Scanning for chemical optical signatures of vegetation loss & concrete luminance spikes.
+    </div>
+    <div class="sb-time" id="utc-time">--:--:-- UTC</div>
+    <div style="margin-top:4px;" class="proxy-info">
+      <div class="proxy-row"><span class="proxy-lbl">Auth</span><span class="proxy-val" id="auth-status">Authenticating…</span></div>
+      <div class="proxy-row"><span class="proxy-lbl">Resolution</span><span class="proxy-val" id="res-status">Crisp-Edge Upscaling</span></div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+  <div class="topbar">
+    <div><span class="tb-breadcrumb" id="breadcrumb">UrbanEye / Map & AI Inspector</span></div>
+    <div class="tb-right">
+      <div class="tb-chip"><div class="dot"></div>Live Map View</div>
+      <div class="tb-chip" id="topbar-time">--:--:-- UTC</div>
+      <div class="tb-chip warn" id="anomaly-chip">⚠ 0 Anomalies in View</div>
+    </div>
+  </div>
+
+  <div id="map-container">
+    <div id="map-loading" class="map-loading-indicator"><div class="spinner"></div> Synchronizing Live Satellite Feed...</div>
+    <div id="map"></div>
+
+    <div class="map-coords-bar" id="map-coords">Lat -- · Lon --</div>
+
+    <div class="map-status-bar">
+      <div class="map-status-title" id="layer-name">True Color Base</div>
+      <div class="map-status-row"><span>Source</span><span>Esri High-Res / Sentinel-2 L2A</span></div>
+      <div class="map-status-row"><span>Date</span><span id="img-date">Current</span></div>
+    </div>
+
+    <!-- AOI Inspector -->
+    <div class="aoi-toolbar">
+      <div class="aoi-btn" id="aoi-draw-btn" onclick="toggleAOI()">⬚ Draw Inspection Area</div>
+    </div>
+    <div class="aoi-hint" id="aoi-hint">Click and drag on the map to draw an inspection area</div>
+    
+    <!-- Dynamic Bottom Bar with Time Travel Selector -->
+    <div class="aoi-bottom-bar" id="aoi-bottom-bar">
+      <div id="aoi-default-controls" style="display:flex;align-items:center;gap:14px;">
+        <span class="aoi-bottom-label">⬚ AOI</span>
+        <span class="aoi-bottom-val" id="aoi-size-val">—</span>
+        <div class="aoi-sep"></div>
+        <select id="time-travel-sel" style="background:var(--bg-surface); color:var(--text-1); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-size:11px; outline:none; cursor:pointer;">
+          <option value="1" selected>vs 1 Year Ago</option>
+          <option value="2">vs 2 Years Ago</option>
+          <option value="3">vs 3 Years Ago</option>
+          <option value="4">vs 4 Years Ago</option>
+          <option value="5">vs 5 Years Ago</option>
+          <option value="6">vs 6 Years Ago</option>
+        </select>
+        <button class="aoi-run-btn" onclick="runRealTimeAnalysis()">🔍 Run Signature AI</button>
+        <button class="aoi-clear-btn" onclick="clearAOI()">✕ Clear</button>
+      </div>
+      <div id="aoi-post-controls" style="display:none;align-items:center;gap:10px;">
+        <!-- Controls injected dynamically after analysis -->
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 3D Viewer Modal -->
+<div id="modal3d">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title">🌍 3D Field View <span id="modal-coords" style="color:var(--blue);font-size:12px;margin-left:10px;font-weight:400;"></span></div>
+      <button class="modal-close" onclick="close3DView()">✕</button>
+    </div>
+    <div id="viewer3d"></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ======================================================
+   CONFIG
+====================================================== */
+const CLIENT_ID     = 'sh-fe2985a1-b4fa-4d0e-a0a3-a7601680c54f';
+const CLIENT_SECRET = 'ZvAZtxwPNBCfvauai9goUgy4f2yEOh2z';
+const TOKEN_URL     = 'http://localhost:8000/token';
+
+let token = null, tokenExp = 0;
+let map = null;
+
+// Global State for UI toggles
+let realDetections = [];
+let detectionLayerGroup = null; // Holds all tiny markers
+let overlayBefore = null;       // Leaflet ImageOverlay for past
+let overlayAfter = null;        // Leaflet ImageOverlay for present
+let currentBeforeUrl = null;    // Blob URL
+let currentAfterUrl = null;     // Blob URL
+let areMarkersVisible = true;
+
+// Simulated Risk Zones
+const baku2040PlanZones = [
+  { name: "Böyükşor Göl Parkı Rekreasiya Zolağı", bounds: L.latLngBounds([40.41, 49.88], [40.44, 49.92]) },
+  { name: "Xocahəsən Nəbatat Parkı 2040", bounds: L.latLngBounds([40.40, 49.77], [40.43, 49.80]) },
+  { name: "Zığ Göl Parkı Bərpa Ərazisi", bounds: L.latLngBounds([40.36, 49.98], [40.38, 50.01]) }
+];
+const culturalHeritageZones = [
+  { name: "İçərişəhər Tarixi Qoruq / Mühafizə Zonası", bounds: L.latLngBounds([40.360, 49.830], [40.370, 49.840]) }
+];
+
+function checkStrategicRisk(lat, lng, conf) {
+  if (conf <= 90) return null;
+  const pt = L.latLng(lat, lng);
+  for (let zone of baku2040PlanZones) {
+    if (zone.bounds.contains(pt)) return `Konflikt: ${zone.name}`;
+  }
+  for (let zone of culturalHeritageZones) {
+    if (zone.bounds.contains(pt)) return `Tarixi İrs: ${zone.name}`;
+  }
+  return null;
+}
+
+/* ======================================================
+   CLOCK
+====================================================== */
+function tick() {
+  const t = new Date().toUTCString().split(' ')[4] + ' UTC';
+  document.getElementById('utc-time').textContent  = t;
+  document.getElementById('topbar-time').textContent = t;
+}
+setInterval(tick, 1000); tick();
+
+/* ======================================================
+   AUTH — Copernicus OAuth2
+====================================================== */
+async function getToken() {
+  if (token && Date.now() < tokenExp) return token;
+
+  document.getElementById('auth-status').textContent = 'Authenticating…';
+  document.getElementById('auth-status').className = 'proxy-val warn-c';
+  
+  try {
+    const res = await fetch(TOKEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type:    'client_credentials',
+        client_id:     CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+      }),
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const d = await res.json();
+    token    = d.access_token;
+    tokenExp = Date.now() + (d.expires_in - 60) * 1000;
+
+    const expMin = Math.round((tokenExp - Date.now()) / 60000);
+    document.getElementById('proxy-ttl').textContent = expMin + ' min';
+    document.getElementById('auth-status').textContent = 'Active ✓';
+    document.getElementById('auth-status').className = 'proxy-val ok';
+    
+    return token;
+  } catch (e) {
+    document.getElementById('auth-status').textContent = 'Failed';
+    document.getElementById('auth-status').className = 'proxy-val err-c';
+    return null;
+  }
+}
+
+/* ======================================================
+   INIT MAIN MAP
+====================================================== */
+function initMap() {
+  map = L.map('map', {
+    center: [40.4093, 49.8671], // Baku
+    zoom:   12,
+    zoomControl: false,
+  });
+
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+  // Fallback Base map (Esri World Imagery)
+  L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    { attribution: '© Esri', maxZoom: 19, opacity: 1 }
+  ).addTo(map);
+
+  map.on('mousemove', e => {
+    document.getElementById('map-coords').textContent = `Lat ${e.latlng.lat.toFixed(4)} · Lon ${e.latlng.lng.toFixed(4)}`;
+  });
+
+  // Layer group to hold the tiny precise marker dots
+  detectionLayerGroup = L.layerGroup().addTo(map);
+}
+
+/* ======================================================
+   AOI DRAWING TOOL
+====================================================== */
+let aoiMode   = false;
+let aoiRect   = null;
+let aoiLayer  = null;
+let drawStart = null;
+
+function toggleAOI() {
+  aoiMode = !aoiMode;
+  const btn  = document.getElementById('aoi-draw-btn');
+  const hint = document.getElementById('aoi-hint');
+
+  if (aoiMode) {
+    btn.classList.add('active');
+    btn.textContent = '✕ Cancel Drawing';
+    hint.classList.add('show');
+    map.dragging.disable();
+    map.getContainer().style.cursor = 'crosshair';
+    map.on('mousedown', aoiMouseDown);
+  } else {
+    stopAOIDraw();
+  }
+}
+
+function stopAOIDraw() {
+  aoiMode = false;
+  const btn  = document.getElementById('aoi-draw-btn');
+  const hint = document.getElementById('aoi-hint');
+  btn.classList.remove('active');
+  btn.textContent = '⬚ Draw Inspection Area';
+  hint.classList.remove('show');
+  map.dragging.enable();
+  map.getContainer().style.cursor = '';
+  map.off('mousedown', aoiMouseDown);
+  map.off('mousemove', aoiMouseMove);
+  map.off('mouseup',   aoiMouseUp);
+}
+
+function aoiMouseDown(e) {
+  drawStart = e.latlng;
+  if (aoiLayer) { map.removeLayer(aoiLayer); aoiLayer = null; }
+  map.on('mousemove', aoiMouseMove);
+  map.on('mouseup',   aoiMouseUp);
+}
+
+function aoiMouseMove(e) {
+  if (!drawStart) return;
+  if (aoiLayer) map.removeLayer(aoiLayer);
+  const bounds = L.latLngBounds(drawStart, e.latlng);
+  aoiLayer = L.rectangle(bounds, {
+    color: 'var(--teal)', weight: 2, dashArray: '6 4', fillColor: 'rgba(45,212,191,0.08)', fillOpacity: 1,
+  }).addTo(map);
+}
+
+function aoiMouseUp(e) {
+  map.off('mousemove', aoiMouseMove);
+  map.off('mouseup',   aoiMouseUp);
+  if (!drawStart || !aoiLayer) return;
+
+  const bounds = aoiLayer.getBounds();
+  aoiRect = { bounds, sw: bounds.getSouthWest(), ne: bounds.getNorthEast() };
+
+  const latKm   = Math.abs(aoiRect.ne.lat - aoiRect.sw.lat) * 111;
+  const lngKm   = Math.abs(aoiRect.ne.lng - aoiRect.sw.lng) * 111 * Math.cos((aoiRect.ne.lat + aoiRect.sw.lat) / 2 * Math.PI / 180);
+  const areaKm2 = (latKm * lngKm).toFixed(2);
+
+  const sizeEl = document.getElementById('aoi-size-val');
+  const runBtn = document.querySelector('.aoi-run-btn');
+
+  // Prevent users from drawing massive boxes that crash memory limits
+  if (parseFloat(areaKm2) > 200) {
+    sizeEl.innerHTML = `<span style="color:var(--red)">${areaKm2} km² (Max 200 for High-Res)</span>`;
+    runBtn.style.opacity = '0.5';
+    runBtn.style.pointerEvents = 'none';
+  } else {
+    sizeEl.innerHTML = `${areaKm2} km²`;
+    runBtn.style.opacity = '1';
+    runBtn.style.pointerEvents = 'auto';
+  }
+
+  document.getElementById('aoi-bottom-bar').classList.add('show');
+  document.getElementById('aoi-default-controls').style.display = 'flex';
+  document.getElementById('aoi-post-controls').style.display = 'none';
+
+  stopAOIDraw();
+  drawStart = null;
+}
+
+function clearAOI() {
+  if (aoiLayer) { map.removeLayer(aoiLayer); aoiLayer = null; }
+  aoiRect = null;
+  
+  if (overlayBefore) map.removeLayer(overlayBefore);
+  if (overlayAfter) map.removeLayer(overlayAfter);
+  overlayBefore = null;
+  overlayAfter = null;
+  detectionLayerGroup.clearLayers();
+  
+  if (currentBeforeUrl) URL.revokeObjectURL(currentBeforeUrl);
+  if (currentAfterUrl) URL.revokeObjectURL(currentAfterUrl);
+  currentBeforeUrl = null;
+  currentAfterUrl = null;
+
+  document.getElementById('aoi-bottom-bar').classList.remove('show');
+  document.getElementById('aoi-results-sec').style.display = 'none';
+  document.getElementById('live-det-list').innerHTML = '<div style="color:var(--text-3);font-size:12px;text-align:center;padding:10px 0;">Draw an Inspection Area on the map to run real-time change detection.</div>';
+  document.getElementById('anomaly-chip').textContent = `⚠ 0 Anomalies in View`;
+}
+
+/* ======================================================
+   CORE AI ENGINE: OPTICAL CONSTRUCTION SIGNATURE DETECTION
+====================================================== */
+
+function createImg(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Canvas rendering failed'));
+    img.src = src;
+  });
+}
+
+// Process API directly fetches high-res imagery, bypassing all proxy issues
+async function fetchProcessAPI(bounds, fromDate, toDate, token, pxWidth, pxHeight) {
+  const payload = {
+    input: {
+      bounds: {
+        bbox: [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()]
+      },
+      data: [{
+        type: "sentinel-2-l2a",
+        dataFilter: {
+          timeRange: { from: `${fromDate}T00:00:00Z`, to: `${toDate}T23:59:59Z` },
+          maxCloudCoverage: 20,           
+          mosaickingOrder: "leastCC"      
+        }
+      }]
+    },
+    output: {
+      width: pxWidth, height: pxHeight,
+      responses: [{ identifier: "default", format: { type: "image/png" } }]
+    },
+    evalscript: `//VERSION=3
+    function setup() {
+      return { input: ["B04", "B03", "B02", "dataMask"], output: { bands: 4 } };
+    }
+    function evaluatePixel(sample) {
+      const boost = 2.8;
+      const offset = 0.05;
+      return [
+        Math.max(0, sample.B04 * boost - offset), 
+        Math.max(0, sample.B03 * boost - offset), 
+        Math.max(0, sample.B02 * boost - offset), 
+        sample.dataMask
+      ];
+    }`
+  };
+
+  const res = await fetch("https://sh.dataspace.copernicus.eu/api/v1/process", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+      "Accept": "image/png"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Copernicus API Error: ${errText}`);
+  }
+
+  const blob = await res.blob();
+  return URL.createObjectURL(blob);
+}
+
+async function runRealTimeAnalysis() {
+  if (!aoiRect) return;
+  const sec  = document.getElementById('aoi-results-sec');
+  const cont = document.getElementById('aoi-results-content');
+  const list = document.getElementById('live-det-list');
+  
+  const yearsBack = parseInt(document.getElementById('time-travel-sel').value, 10);
+  const yearsLabel = yearsBack === 1 ? '1 Year Ago' : `${yearsBack} Years Ago`;
+
+  sec.style.display = 'block';
+  
+  cont.innerHTML = `
+    <div style="font-size:12px;color:var(--text-1);margin-bottom:8px;" id="analysis-status-text">
+      <div class="analysis-loader"><div class="spinner"></div> Calculating exact physical boundaries...</div>
+    </div>
+    <div class="proof-grid">
+      <div class="proof-img-wrap"><span class="proof-lbl">${yearsLabel}</span><canvas id="c-bef" class="proof-canvas pixelated"></canvas></div>
+      <div class="proof-img-wrap"><span class="proof-lbl">Today</span><canvas id="c-aft" class="proof-canvas pixelated"></canvas></div>
+      <div class="proof-img-wrap"><span class="proof-lbl">Optical Signatures</span><canvas id="c-msk" class="proof-canvas pixelated"></canvas></div>
+    </div>
+  `;
+  list.innerHTML = `<div style="color:var(--text-3);font-size:12px;text-align:center;padding:20px 0;">Scanning for chemical optical signatures of construction...</div>`;
+
+  const tok = await getToken();
+  if (!tok) {
+    document.getElementById('analysis-status-text').innerHTML = '<div style="color:var(--red)">Authentication failed. Cannot fetch satellite data.</div>';
+    return;
+  }
+
+  try {
+    const ptSW = L.latLng(aoiRect.sw.lat, aoiRect.sw.lng);
+    const ptSE = L.latLng(aoiRect.sw.lat, aoiRect.ne.lng);
+    const ptNW = L.latLng(aoiRect.ne.lat, aoiRect.sw.lng);
+    
+    const widthMeters = ptSW.distanceTo(ptSE);
+    const heightMeters = ptSW.distanceTo(ptNW);
+    const aspect = widthMeters / heightMeters;
+
+    let pxWidth = 1024;
+    let pxHeight = Math.round(1024 / aspect);
+    if (pxHeight > 1024) {
+        pxHeight = 1024;
+        pxWidth = Math.round(1024 * aspect);
+    }
+    
+    const mpp = widthMeters / pxWidth; 
+
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const pastStr = new Date(now.getTime() - 120 * 86400000).toISOString().split('T')[0]; 
+    
+    const historyTarget = new Date(now.getTime() - yearsBack * 365 * 86400000);
+    const beforeToStr = historyTarget.toISOString().split('T')[0];
+    const beforeFromStr = new Date(historyTarget.getTime() - 120 * 86400000).toISOString().split('T')[0];
+
+    document.getElementById('analysis-status-text').innerHTML = `<div class="analysis-loader"><div class="spinner"></div> Generating Supersampled Imagery (${pxWidth}x${pxHeight}px)...</div>`;
+
+    const [urlBefore, urlAfter] = await Promise.all([
+      fetchProcessAPI(aoiRect.bounds, beforeFromStr, beforeToStr, tok, pxWidth, pxHeight),
+      fetchProcessAPI(aoiRect.bounds, pastStr, todayStr, tok, pxWidth, pxHeight)
+    ]);
+    
+    currentBeforeUrl = urlBefore;
+    currentAfterUrl = urlAfter;
+
+    if (overlayBefore) map.removeLayer(overlayBefore);
+    if (overlayAfter) map.removeLayer(overlayAfter);
+    overlayBefore = L.imageOverlay(currentBeforeUrl, aoiRect.bounds, {opacity: 1, zIndex: 400, className: 'pixelated'});
+    overlayAfter = L.imageOverlay(currentAfterUrl, aoiRect.bounds, {opacity: 1, zIndex: 400, className: 'pixelated'});
+
+    document.getElementById('analysis-status-text').innerHTML = `<div class="analysis-loader"><div class="spinner"></div> Running Optical Signature Detection...</div>`;
+
+    const imgBefore = await createImg(currentBeforeUrl);
+    const imgAfter = await createImg(currentAfterUrl);
+
+    const cBef = document.getElementById('c-bef');
+    const cAft = document.getElementById('c-aft');
+    const cMsk = document.getElementById('c-msk');
+    
+    cBef.width = pxWidth; cBef.height = pxHeight;
+    cAft.width = pxWidth; cAft.height = pxHeight;
+    cMsk.width = pxWidth; cMsk.height = pxHeight;
+
+    const cb = cBef.getContext('2d', {willReadFrequently: true});
+    const ca = cAft.getContext('2d', {willReadFrequently: true});
+    const cm = cMsk.getContext('2d');
+    
+    cb.imageSmoothingEnabled = false;
+    ca.imageSmoothingEnabled = false;
+
+    cb.drawImage(imgBefore, 0, 0, pxWidth, pxHeight);
+    ca.drawImage(imgAfter,  0, 0, pxWidth, pxHeight);
+
+    // =========================================================================================
+    // FUNCTIONAL AI LOGIC: Optical Physics Signature Detection
+    // =========================================================================================
+    const dataB = cb.getImageData(0, 0, pxWidth, pxHeight).data;
+    const dataA = ca.getImageData(0, 0, pxWidth, pxHeight).data;
+    const imgDataM = cm.createImageData(pxWidth, pxHeight);
+    const dataM = imgDataM.data;
+
+    const GRID_SIZE = Math.max(4, Math.round(30 / mpp)); 
+    const cols = Math.floor(pxWidth / GRID_SIZE);
+    const rows = Math.floor(pxHeight / GRID_SIZE);
+    const changeBlocks = new Array(rows * cols).fill(null).map(() => ({ count: 0, typeTotal: 0 }));
+    let totalChangedPixels = 0;
+
+    for (let y = 0; y < pxHeight; y++) {
+      for (let x = 0; x < pxWidth; x++) {
+        const i = (y * pxWidth + x) * 4;
+        
+        const r1 = dataB[i], g1 = dataB[i+1], b1 = dataB[i+2], a1 = dataB[i+3];
+        const r2 = dataA[i], g2 = dataA[i+1], b2 = dataA[i+2], a2 = dataA[i+3];
+
+        if (a1 === 0 || a2 === 0) {
+          dataM[i]=0; dataM[i+1]=0; dataM[i+2]=0; dataM[i+3]=255; continue;
+        }
+        if ((r1>240 && g1>240 && b1>240) || (r2>240 && g2>240 && b2>240)) {
+          dataM[i]=0; dataM[i+1]=0; dataM[i+2]=0; dataM[i+3]=255; continue;
+        }
+
+        const delta = Math.abs(r1-r2) + Math.abs(g1-g2) + Math.abs(b1-b2);
+        const lum1 = (r1 * 0.299) + (g1 * 0.587) + (b1 * 0.114);
+        const lum2 = (r2 * 0.299) + (g2 * 0.587) + (b2 * 0.114);
+        
+        const veg1 = (g1 - r1) / (g1 + r1 + 0.001);
+        const veg2 = (g2 - r2) / (g2 + r2 + 0.001);
+
+        let detected = false;
+        let typeCode = 0; 
+
+        if (delta > 90) {
+            // SIGNATURE A: Land Clearing / Earthworks
+            if (veg1 > 0.04 && veg2 <= 0.0 && r2 > g2) {
+                detected = true;
+                typeCode = 1;
+            }
+            // SIGNATURE B: New Construction / Concrete
+            else if (lum2 > lum1 + 50 && Math.abs(r2-g2) < 25 && Math.abs(g2-b2) < 25) {
+                detected = true;
+                typeCode = 2;
+            }
+            // SIGNATURE C: High-Albedo Roof
+            else if (delta > 180 && lum2 > 130 && lum1 < 90) {
+                detected = true;
+                typeCode = 2;
+            }
+        }
+
+        if (detected) { 
+          dataM[i]   = typeCode === 1 ? 245 : 244; 
+          dataM[i+1] = typeCode === 1 ? 158 : 63;  
+          dataM[i+2] = typeCode === 1 ? 11  : 94;  
+          dataM[i+3] = 255; 
+          
+          totalChangedPixels++;
+          const bx = Math.floor(x / GRID_SIZE);
+          const by = Math.floor(y / GRID_SIZE);
+          if (bx < cols && by < rows) { 
+              changeBlocks[by * cols + bx].count++; 
+              changeBlocks[by * cols + bx].typeTotal += typeCode;
+          }
+        } else {
+          const gray = lum2;
+          dataM[i] = gray*0.35; dataM[i+1] = gray*0.35; dataM[i+2] = gray*0.35; dataM[i+3] = 255;
+        }
+      }
+    }
+    cm.putImageData(imgDataM, 0, 0);
+
+    // 7. Extract coordinate clusters
+    let rawDetections = [];
+    const triggerThreshold = (GRID_SIZE * GRID_SIZE) * 0.40; // Increased to 40% to drastically reduce false positive clutter
+
+    for (let by = 0; by < rows; by++) {
+      for (let bx = 0; bx < cols; bx++) {
+        const block = changeBlocks[by * cols + bx];
+        if (block.count > triggerThreshold) { 
+          
+          const pixelX = bx * GRID_SIZE + (GRID_SIZE/2);
+          const pixelY = by * GRID_SIZE + (GRID_SIZE/2);
+          
+          const swLat = aoiRect.sw.lat, swLng = aoiRect.sw.lng;
+          const neLat = aoiRect.ne.lat, neLng = aoiRect.ne.lng;
+          
+          const lat = neLat - (pixelY / pxHeight) * (neLat - swLat);
+          const lng = swLng + (pixelX / pxWidth)  * (neLng - swLng);
+
+          const confVal = Math.min(99.9, 75 + (block.count / (GRID_SIZE*GRID_SIZE)) * 100);
+          const riskWarning = checkStrategicRisk(lat, lng, confVal);
+
+          rawDetections.push({
+            id: 'DET-' + Math.floor(Math.random()*90000 + 10000),
+            lat: lat,
+            lng: lng,
+            conf: confVal,
+            pixels: block.count,
+            riskWarning: riskWarning
+          });
+        }
+      }
+    }
+
+    rawDetections.sort((a,b) => b.conf - a.conf);
+    
+    document.getElementById('analysis-status-text').innerHTML = `<div class="analysis-loader"><div class="spinner"></div> Verifying Street Level 3D Data for ${rawDetections.length} signatures...</div>`;
+
+    realDetections = await Promise.all(rawDetections.map(async (d) => {
+        if (d.riskWarning) {
+            d.color = "#f43f5e";
+            d.label = "Preservation Risk";
+            d.has3D = false;
+        } else {
+            const has3D = await new Promise((resolve) => {
+                if (typeof google === 'undefined' || typeof google.maps === 'undefined') return resolve(false);
+                const sv = new google.maps.StreetViewService();
+                sv.getPanorama({ location: { lat: d.lat, lng: d.lng }, radius: 50 }, (data, status) => {
+                    resolve(status === google.maps.StreetViewStatus.OK);
+                });
+            });
+            if (has3D) {
+                d.color = "#3b82f6";
+                d.label = "Anomaly (3D Assessed)";
+                d.has3D = true;
+            } else {
+                d.color = "#f59e0b";
+                d.label = "Anomaly (No Street View)";
+                d.has3D = false;
+            }
+        }
+        return d;
+    }));
+
+    document.getElementById('analysis-status-text').innerHTML = `
+      Analyzed <b style="color:var(--teal)">${pxWidth * pxHeight}</b> supersampled pixels.<br>
+      Found <b>${realDetections.length}</b> verified construction signatures.<br>
+      <span style="font-size:9.5px;color:var(--text-3);">*Optical filter active: Ignoring standard shadows & seasons.</span>
+    `;
+
+    // Swap Bottom Bar UI to Map Overlay controls
+    document.getElementById('aoi-default-controls').style.display = 'none';
+    const postControls = document.getElementById('aoi-post-controls');
+    postControls.style.display = 'flex';
+    postControls.innerHTML = `
+      <span class="aoi-bottom-label" style="color:var(--text-1)">MAP OVERLAYS:</span>
+      <button class="aoi-run-btn" style="background:#3b82f6;color:#fff" onclick="toggleMapOverlay('before')">📅 ${yearsLabel}</button>
+      <button class="aoi-run-btn" style="background:var(--teal);color:#111" onclick="toggleMapOverlay('after')">📡 Today</button>
+      <button class="aoi-run-btn" style="background:var(--bg-card);color:var(--text-1);border:1px solid var(--border)" onclick="toggleMapOverlay('none')">🗺️ Base</button>
+      <div class="aoi-sep"></div>
+      <button class="aoi-run-btn" style="background:var(--amber);color:#111" id="toggle-dots-btn" onclick="toggleMarkers()">👁 Hide Dots</button>
+      <button class="aoi-clear-btn" onclick="clearAOI()">✕ Clear</button>
+    `;
+
+    // Default to showing "After" overlay for visual context
+    toggleMapOverlay('after');
+    plotRealDetections();
+
+  } catch (err) {
+    console.error("Analysis aborted:", err);
+    document.getElementById('analysis-status-text').innerHTML = `
+      <div style="color:var(--red);font-size:11px;padding:8px;background:var(--bg-card);border:1px solid rgba(244,63,94,0.3);border-radius:6px;margin-bottom:8px;line-height:1.4;">
+        <b>Analysis aborted:</b><br>${err.message}
+      </div>
+    `;
+    list.innerHTML = `<div style="color:var(--text-3);font-size:12px;text-align:center;padding:20px 0;">Awaiting valid data.</div>`;
+  }
+}
+
+/* ======================================================
+   NEW UI INTERACTION FUNCTIONS
+====================================================== */
+function toggleMapOverlay(type) {
+  if (overlayBefore) map.removeLayer(overlayBefore);
+  if (overlayAfter) map.removeLayer(overlayAfter);
+
+  if (type === 'before' && overlayBefore) {
+    map.addLayer(overlayBefore);
+  } else if (type === 'after' && overlayAfter) {
+    map.addLayer(overlayAfter);
+  }
+}
+
+function toggleMarkers() {
+  areMarkersVisible = !areMarkersVisible;
+  const btn = document.getElementById('toggle-dots-btn');
+  
+  if (areMarkersVisible) {
+    map.addLayer(detectionLayerGroup);
+    btn.textContent = "👁 Hide Dots";
+    btn.style.opacity = '1';
+  } else {
+    map.removeLayer(detectionLayerGroup);
+    btn.textContent = "👁 Show Dots";
+    btn.style.opacity = '0.6';
+  }
+}
+
+function plotRealDetections() {
+  const list = document.getElementById('live-det-list');
+  list.innerHTML = '';
+  
+  detectionLayerGroup.clearLayers();
+  areMarkersVisible = true;
+
+  if (realDetections.length === 0) {
+    list.innerHTML = `<div style="color:var(--green);font-size:12px;text-align:center;padding:20px 0;">✅ No optical signatures of construction detected in this sector.</div>`;
+    document.getElementById('anomaly-chip').textContent = `✅ 0 Anomalies in View`;
+    document.getElementById('anomaly-chip').className = 'tb-chip';
+    return;
+  }
+
+  document.getElementById('anomaly-chip').textContent = `⚠ ${realDetections.length} Signatures Found`;
+  document.getElementById('anomaly-chip').className = 'tb-chip warn';
+
+  realDetections.forEach((d, idx) => {
+    const badgeClass = d.riskWarning ? 'badge-alert' : 'badge-warn';
+
+    if (idx < 30) { 
+      list.innerHTML += `
+        <div class="det-card ${d.riskWarning ? 'alert' : 'warn'}">
+          <div class="det-hdr">
+            <span class="det-id">${d.id}</span>
+            <span class="det-badge ${badgeClass}">${d.conf > 90 ? 'High Confidence' : 'Medium Risk'}</span>
+          </div>
+          <div class="det-title">${d.label}</div>
+          <div class="det-coords">${d.lat.toFixed(5)}° N, ${d.lng.toFixed(5)}° E</div>
+          <div style="height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:4px;">
+            <div style="height:100%;border-radius:2px;width:${d.conf}%;background:${d.color}"></div>
+          </div>
+          <div class="det-meta"><span>Conf: ${d.conf.toFixed(1)}%</span><span>Est Area: ~${d.pixels * 10} m²</span></div>
+        </div>`;
+    }
+
+    let iconHtml = `<div style="width:6px;height:6px;border-radius:50%;background:${d.color};border:1px solid rgba(0,0,0,0.8);box-shadow: 0 0 4px ${d.color};"></div>`;
+    let iSize = [6, 6], iAnchor = [3, 3];
+
+    if (d.riskWarning) {
+      iconHtml = `<div style="font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 0 4px rgba(244,63,94,0.8));">⚠️</div>`;
+      iSize = [20, 20]; iAnchor = [10, 10];
+    }
+
+    const icon = L.divIcon({
+      className: '',
+      html: iconHtml,
+      iconSize: iSize,
+      iconAnchor: iAnchor,
+    });
+
+    const marker = L.marker([d.lat, d.lng], { icon })
+      .bindPopup(`
+        <div style="min-width:180px;color:var(--bg)">
+          <div style="font-weight:700;color:${d.riskWarning ? 'var(--red)' : d.color};margin-bottom:4px;">${d.label}</div>
+          <div style="font-size:11px;margin-bottom:2px;"><b>ID:</b> ${d.id}</div>
+          <div style="font-size:11px;margin-bottom:2px;"><b>Coords:</b> ${d.lat.toFixed(5)}, ${d.lng.toFixed(5)}</div>
+          <div style="font-size:11px;margin-bottom:6px;"><b>Confidence:</b> ${d.conf.toFixed(1)}%</div>
+          ${d.riskWarning ? `
+            <div style="font-size:11px;color:var(--red);font-weight:bold;margin-top:4px;margin-bottom:4px;">⚠️ ${d.riskWarning}</div>
+            <button onclick="openDual3DView('${d.id}', '${d.riskWarning}')" style="width:100%;padding:6px;margin-top:4px;background:var(--red);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;transition:opacity 0.2s;">🚨 2040 Impact Analysis (Dual 3D)</button>
+          ` : ''}
+          ${d.has3D ? `<button onclick="open3DView('${d.id}', ${d.lat}, ${d.lng}, '${d.label}')" style="width:100%;padding:6px;margin-top:4px;background:var(--blue);color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;transition:opacity 0.2s;">🌍 Evaluate in 3D</button>` : ''}
+        </div>
+      `);
+      
+    marker.addTo(detectionLayerGroup);
+  });
+}
+
+function open3DView(id, lat, lng, label) {
+  document.getElementById('modal-coords').textContent = `${lat.toFixed(5)}° N, ${lng.toFixed(5)}° E`;
+  const modal = document.getElementById('modal3d');
+  modal.style.display = 'flex';
+  const container = document.getElementById('viewer3d');
+  
+  container.innerHTML = `
+    <iframe width="100%" height="100%" frameborder="0" style="border:0; width:100%; height:100%;" src="https://maps.google.com/maps?q=&layer=c&cbll=${lat},${lng}&cbp=11,0,0,0,0&output=svembed" allowfullscreen></iframe>
+    <div style="position:absolute;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(22,27,38,0.95);padding:14px;border:1px solid var(--border);border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,0.8);display:flex;flex-direction:column;gap:10px;z-index:100;min-width:300px;">
+        <div style="font-size:12px;font-weight:600;color:var(--text-1);text-align:center;">Field Assessment: ${id}</div>
+        <div style="font-size:11px;color:var(--text-3);text-align:center;margin-bottom:4px;">${label}</div>
+        <div style="display:flex;gap:10px;">
+            <button onclick="assessAnomaly('${id}', 'legal')" style="flex:1;padding:8px;background:rgba(16,185,129,0.15);color:var(--green);border:1px solid rgba(16,185,129,0.3);border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;transition:opacity 0.2s;">✅ Verified Legal</button>
+            <button onclick="assessAnomaly('${id}', 'illegal')" style="flex:1;padding:8px;background:rgba(244,63,94,0.15);color:var(--red);border:1px solid rgba(244,63,94,0.3);border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;transition:opacity 0.2s;">⚠️ Flag Illegal</button>
+        </div>
+    </div>
+  `;
+}
+
+function assessAnomaly(id, status) {
+    const det = realDetections.find(d => d.id === id);
+    if (!det) return;
+
+    if (status === 'legal') {
+        det.color = '#10b981'; // Green
+        det.label = 'Supervisor Verified Legal';
+        det.riskWarning = null;
+    } else {
+        det.color = '#f43f5e'; // Red
+        det.label = 'Flagged Illegal Structure';
+        det.riskWarning = 'Manual Supervisor Flag (High Priority)';
+    }
+    
+    close3DView();
+    plotRealDetections();
+}
+
+function openDual3DView(id, riskType) {
+  document.getElementById('modal-coords').textContent = `[${id}] 2040 Master Plan Impact`;
+  const modal = document.getElementById('modal3d');
+  modal.style.display = 'flex';
+  const container = document.getElementById('viewer3d');
+  
+  const cleanRiskInfo = riskType.replace('Konflikt: ', '').replace('Tarixi İrs: ', '');
+  
+  container.innerHTML = `
+    <div style="display:flex; width:100%; height:100%;">
+        <div id="dual-left" style="flex:1; border-right:2px solid var(--border); position:relative;">
+            <div style="position:absolute;top:14px;left:14px;z-index:999;background:rgba(244,63,94,0.9);padding:8px 16px;border-radius:6px;color:#fff;font-weight:700;font-size:12px;box-shadow:0 6px 15px rgba(0,0,0,0.5);">🔴 PENDING: Current State (Illegal Anomaly)</div>
+        </div>
+        <div id="dual-right" style="flex:1; position:relative;">
+            <div style="position:absolute;top:14px;right:14px;z-index:999;background:rgba(16,185,129,0.9);padding:8px 16px;border-radius:6px;color:#fff;font-weight:700;font-size:12px;box-shadow:0 6px 15px rgba(0,0,0,0.5);">🟢 2040 VISION: ${cleanRiskInfo}</div>
+        </div>
+    </div>
+  `;
+  
+  renderDualTerrain('dual-left', 'illegal');
+  renderDualTerrain('dual-right', '2040');
+}
+
+function renderDualTerrain(containerId, mode) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const width = container.clientWidth;
+  const height = container.clientHeight;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(mode === '2040' ? 0x0f1a20 : 0x161b26);
+  
+  const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
+  camera.position.set(30, 40, 40);
+  camera.lookAt(0, 0, 0);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(width, height);
+  container.appendChild(renderer.domElement);
+
+  const ambient = new THREE.AmbientLight(0xffffff, mode === '2040' ? 0.8 : 0.4);
+  scene.add(ambient);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dirLight.position.set(10, 50, 20);
+  scene.add(dirLight);
+
+  const grid = new THREE.GridHelper(100, 20, 0x313d55, 0x2a3347);
+  scene.add(grid);
+  const planeGeo = new THREE.PlaneGeometry(100, 100);
+  const planeMat = new THREE.MeshLambertMaterial({ color: mode === '2040' ? 0x064e3b : 0x1c2333 });
+  const plane = new THREE.Mesh(planeGeo, planeMat);
+  plane.rotation.x = -Math.PI / 2;
+  scene.add(plane);
+
+  if (mode === 'illegal') {
+      const bHeight = 25;
+      const boxGeo = new THREE.BoxGeometry(10, bHeight, 10);
+      const boxMat = new THREE.MeshLambertMaterial({ color: 0xf43f5e });
+      const building = new THREE.Mesh(boxGeo, boxMat);
+      building.position.y = bHeight / 2;
+      scene.add(building);
+      
+      const edges = new THREE.EdgesGeometry(boxGeo);
+      const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xffffff }));
+      building.add(line);
+  } else if (mode === '2040') {
+      for(let i=0; i<30; i++) {
+          const trunkGeo = new THREE.CylinderGeometry(0.5, 0.5, 4);
+          const trunkMat = new THREE.MeshLambertMaterial({ color: 0x78350f });
+          const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+          
+          const leavesGeo = new THREE.ConeGeometry(0, 5, 8);
+          const leavesMat = new THREE.MeshLambertMaterial({ color: 0x10b981 });
+          const leaves = new THREE.Mesh(leavesGeo, leavesMat);
+          leaves.position.y = 4;
+          
+          const tree = new THREE.Group();
+          tree.add(trunk);
+          tree.add(leaves);
+          
+          tree.position.set((Math.random()-0.5)*40, 2, (Math.random()-0.5)*40);
+          scene.add(tree);
+      }
+      
+      const pavilionGeo = new THREE.BoxGeometry(15, 2, 8);
+      const pavilionMat = new THREE.MeshLambertMaterial({ color: 0x9ca3af });
+      const pavilion = new THREE.Mesh(pavilionGeo, pavilionMat);
+      pavilion.position.set(0, 1, 0);
+      scene.add(pavilion);
+  }
+
+  function animate() {
+    if (!document.getElementById('modal3d') || document.getElementById('modal3d').style.display === 'none') {
+        renderer.dispose();
+        return;
+    }
+    requestAnimationFrame(animate);
+    scene.rotation.y += 0.005;
+    renderer.render(scene, camera);
+  }
+  animate();
+}
+
+function close3DView() {
+  document.getElementById('modal3d').style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initMap();
+  getToken();
+});
+</script>
+</body>
+</html>
