@@ -1,0 +1,20 @@
+{
+    "rewrites": [
+        {
+            "source": "/config.js",
+            "destination": "/Front/config.js"
+        },
+        {
+            "source": "/styles/(.*)",
+            "destination": "/Front/styles/$1"
+        },
+        {
+            "source": "/scripts/(.*)",
+            "destination": "/Front/scripts/$1"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/Front/index.html"
+        }
+    ]
+}
