@@ -128,4 +128,4 @@ The frontend is a static web application. Update the `API_BASE_URL` in `config.j
 
 ---
 
-*Developed for the Urban Innovation Hackathon 2026.*
+*Developed 2026.*
