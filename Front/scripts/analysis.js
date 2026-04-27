@@ -7,6 +7,7 @@ const baku2040PlanZones = [
 const culturalHeritageZones = [
     { name: "İçərişəhər Tarixi Qoruq / Mühafizə Zonası", bounds: L.latLngBounds([40.360, 49.830], [40.370, 49.840]) }
 ];
+let lastAnalysisMeta = null;
 
 function checkStrategicRisk(lat, lng, conf) {
     if (conf <= 90) return null;
@@ -32,6 +33,88 @@ function triggerAnalysisDownload(dataUrl, fileName) {
     document.body.appendChild(link);
     link.click();
     link.remove();
+}
+
+function triggerAnalysisBlobDownload(content, mimeType, fileName) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+}
+
+function getDetectionKind(det) {
+    if (det.label === 'Preservation Risk') return 'Preservation Risk';
+    if (det.label === 'Anomaly (3D Assessed)') return '3D Assessed';
+    if (det.label === 'Anomaly (No Street View)') return 'No Street View';
+    if (det.label === 'Supervisor Verified Legal') return 'Supervisor Verified Legal';
+    if (det.label === 'Flagged Illegal Structure') return 'Flagged Illegal Structure';
+    return 'Other';
+}
+
+function exportAnalysisTextReport() {
+    try {
+        if (!lastAnalysisMeta) {
+            throw new Error('Run analysis before exporting report.');
+        }
+
+        const detections = Array.isArray(realDetections) ? realDetections : [];
+        const kindCounts = detections.reduce((acc, det) => {
+            const kind = getDetectionKind(det);
+            acc[kind] = (acc[kind] || 0) + 1;
+            return acc;
+        }, {});
+
+        const kindLines = Object.keys(kindCounts).length
+            ? Object.entries(kindCounts)
+                .sort((a, b) => b[1] - a[1])
+                .map(([kind, count]) => `- ${kind}: ${count}`)
+                .join('\n')
+            : '- None';
+
+        const detectionLines = detections.length
+            ? detections.map((d, idx) => {
+                const typeLabel = getDetectionKind(d);
+                const risk = d.riskWarning ? ` | Risk: ${d.riskWarning}` : '';
+                return `${idx + 1}. ${d.id} | Type: ${typeLabel} | Label: ${d.label} | Confidence: ${d.conf.toFixed(1)}% | EstArea: ~${d.pixels * 10} m2 | Coords: ${d.lat.toFixed(5)}, ${d.lng.toFixed(5)}${risk}`;
+            }).join('\n')
+            : 'No anomalies were detected in this analysis run.';
+
+        const report = [
+            'UrbanEye Analysis Text Report',
+            '============================',
+            `Generated: ${new Date().toISOString()}`,
+            '',
+            'Analyzed Data',
+            '-------------',
+            `AOI Bounds (W,S,E,N): ${lastAnalysisMeta.aoiBounds.join(', ')}`,
+            `AOI Size: ~${lastAnalysisMeta.widthMeters.toFixed(1)}m x ${lastAnalysisMeta.heightMeters.toFixed(1)}m`,
+            `Comparison Window: ${lastAnalysisMeta.yearsLabel}`,
+            `Before Range: ${lastAnalysisMeta.beforeFromStr} to ${lastAnalysisMeta.beforeToStr}`,
+            `Current Range: ${lastAnalysisMeta.pastStr} to ${lastAnalysisMeta.todayStr}`,
+            `Image Resolution: ${lastAnalysisMeta.pxWidth}x${lastAnalysisMeta.pxHeight} (${lastAnalysisMeta.totalPixels} pixels)`,
+            `Meter per Pixel: ${lastAnalysisMeta.mpp.toFixed(3)}`,
+            '',
+            'Anomaly Summary',
+            '---------------',
+            `Total Anomalies: ${detections.length}`,
+            'By Kind:',
+            kindLines,
+            '',
+            'Anomaly Details',
+            '---------------',
+            detectionLines,
+            ''
+        ].join('\n');
+
+        triggerAnalysisBlobDownload(report, 'text/plain;charset=utf-8', buildAnalysisExportFilename('txt'));
+    } catch (err) {
+        alert(err.message || 'Text report export failed.');
+    }
 }
 
 function wrapTextLines(ctx, text, maxWidth) {
@@ -373,6 +456,26 @@ async function runRealTimeAnalysis() {
         const beforeToStr = historyTarget.toISOString().split('T')[0];
         const beforeFromStr = new Date(historyTarget.getTime() - 120 * 86400000).toISOString().split('T')[0];
 
+        lastAnalysisMeta = {
+            yearsLabel,
+            widthMeters,
+            heightMeters,
+            mpp,
+            pxWidth,
+            pxHeight,
+            totalPixels: pxWidth * pxHeight,
+            todayStr,
+            pastStr,
+            beforeFromStr,
+            beforeToStr,
+            aoiBounds: [
+                aoiRect.bounds.getWest().toFixed(6),
+                aoiRect.bounds.getSouth().toFixed(6),
+                aoiRect.bounds.getEast().toFixed(6),
+                aoiRect.bounds.getNorth().toFixed(6)
+            ]
+        };
+
         document.getElementById('analysis-status-text').innerHTML = `<div class="analysis-loader"><div class="spinner"></div> Generating Supersampled Imagery (${pxWidth}x${pxHeight}px)...</div>`;
 
         const [urlBefore, urlAfter] = await Promise.all([
@@ -568,6 +671,7 @@ async function runRealTimeAnalysis() {
       <button class="aoi-run-btn" style="background:var(--bg-card);color:var(--text-1);border:1px solid var(--border)" onclick="toggleMapOverlay('none')">🗺️ Base</button>
             <button class="aoi-run-btn" style="background:#16a34a;color:#fff" onclick="exportAnalysisImage()">🖼 Export Image</button>
             <button class="aoi-run-btn" style="background:#f97316;color:#111" onclick="exportAnalysisPDF()">📄 Export PDF</button>
+            <button class="aoi-run-btn" style="background:#06b6d4;color:#06202a" onclick="exportAnalysisTextReport()">📝 Export Report</button>
       <div class="aoi-sep"></div>
       <button class="aoi-run-btn" style="background:var(--amber);color:#111" id="toggle-dots-btn" onclick="toggleMarkers()">👁 Hide Dots</button>
       <button class="aoi-clear-btn" onclick="clearAOI()">✕ Clear</button>

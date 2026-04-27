@@ -135,6 +135,9 @@ function clearAOI() {
     currentBeforeUrl = null;
     currentAfterUrl = null;
     currentLiveUrl = null;
+    if (typeof lastAnalysisMeta !== 'undefined') {
+        lastAnalysisMeta = null;
+    }
 
     document.getElementById('aoi-bottom-bar').classList.remove('show');
     document.getElementById('aoi-results-sec').style.display = 'none';
