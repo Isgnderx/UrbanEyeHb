@@ -56,61 +56,74 @@ function getDetectionKind(det) {
     return 'Other';
 }
 
+function getAnalysisReportData() {
+    if (!lastAnalysisMeta) {
+        throw new Error('Run analysis before exporting report.');
+    }
+
+    const detections = Array.isArray(realDetections) ? realDetections : [];
+    const kindCounts = detections.reduce((acc, det) => {
+        const kind = getDetectionKind(det);
+        acc[kind] = (acc[kind] || 0) + 1;
+        return acc;
+    }, {});
+
+    return {
+        meta: lastAnalysisMeta,
+        detections,
+        kindCounts
+    };
+}
+
+function buildAnalysisTextReportContent(reportData) {
+    const { meta, detections, kindCounts } = reportData;
+    const kindLines = Object.keys(kindCounts).length
+        ? Object.entries(kindCounts)
+            .sort((a, b) => b[1] - a[1])
+            .map(([kind, count]) => `- ${kind}: ${count}`)
+            .join('\n')
+        : '- None';
+
+    const detectionLines = detections.length
+        ? detections.map((d, idx) => {
+            const typeLabel = getDetectionKind(d);
+            const risk = d.riskWarning ? ` | Risk: ${d.riskWarning}` : '';
+            return `${idx + 1}. ${d.id} | Type: ${typeLabel} | Label: ${d.label} | Confidence: ${d.conf.toFixed(1)}% | EstArea: ~${d.pixels * 10} m2 | Coords: ${d.lat.toFixed(5)}, ${d.lng.toFixed(5)}${risk}`;
+        }).join('\n')
+        : 'No anomalies were detected in this analysis run.';
+
+    return [
+        'UrbanEye Analysis Text Report',
+        '============================',
+        `Generated: ${new Date().toISOString()}`,
+        '',
+        'Analyzed Data',
+        '-------------',
+        `AOI Bounds (W,S,E,N): ${meta.aoiBounds.join(', ')}`,
+        `AOI Size: ~${meta.widthMeters.toFixed(1)}m x ${meta.heightMeters.toFixed(1)}m`,
+        `Comparison Window: ${meta.yearsLabel}`,
+        `Before Range: ${meta.beforeFromStr} to ${meta.beforeToStr}`,
+        `Current Range: ${meta.pastStr} to ${meta.todayStr}`,
+        `Image Resolution: ${meta.pxWidth}x${meta.pxHeight} (${meta.totalPixels} pixels)`,
+        `Meter per Pixel: ${meta.mpp.toFixed(3)}`,
+        '',
+        'Anomaly Summary',
+        '---------------',
+        `Total Anomalies: ${detections.length}`,
+        'By Kind:',
+        kindLines,
+        '',
+        'Anomaly Details',
+        '---------------',
+        detectionLines,
+        ''
+    ].join('\n');
+}
+
 function exportAnalysisTextReport() {
     try {
-        if (!lastAnalysisMeta) {
-            throw new Error('Run analysis before exporting report.');
-        }
-
-        const detections = Array.isArray(realDetections) ? realDetections : [];
-        const kindCounts = detections.reduce((acc, det) => {
-            const kind = getDetectionKind(det);
-            acc[kind] = (acc[kind] || 0) + 1;
-            return acc;
-        }, {});
-
-        const kindLines = Object.keys(kindCounts).length
-            ? Object.entries(kindCounts)
-                .sort((a, b) => b[1] - a[1])
-                .map(([kind, count]) => `- ${kind}: ${count}`)
-                .join('\n')
-            : '- None';
-
-        const detectionLines = detections.length
-            ? detections.map((d, idx) => {
-                const typeLabel = getDetectionKind(d);
-                const risk = d.riskWarning ? ` | Risk: ${d.riskWarning}` : '';
-                return `${idx + 1}. ${d.id} | Type: ${typeLabel} | Label: ${d.label} | Confidence: ${d.conf.toFixed(1)}% | EstArea: ~${d.pixels * 10} m2 | Coords: ${d.lat.toFixed(5)}, ${d.lng.toFixed(5)}${risk}`;
-            }).join('\n')
-            : 'No anomalies were detected in this analysis run.';
-
-        const report = [
-            'UrbanEye Analysis Text Report',
-            '============================',
-            `Generated: ${new Date().toISOString()}`,
-            '',
-            'Analyzed Data',
-            '-------------',
-            `AOI Bounds (W,S,E,N): ${lastAnalysisMeta.aoiBounds.join(', ')}`,
-            `AOI Size: ~${lastAnalysisMeta.widthMeters.toFixed(1)}m x ${lastAnalysisMeta.heightMeters.toFixed(1)}m`,
-            `Comparison Window: ${lastAnalysisMeta.yearsLabel}`,
-            `Before Range: ${lastAnalysisMeta.beforeFromStr} to ${lastAnalysisMeta.beforeToStr}`,
-            `Current Range: ${lastAnalysisMeta.pastStr} to ${lastAnalysisMeta.todayStr}`,
-            `Image Resolution: ${lastAnalysisMeta.pxWidth}x${lastAnalysisMeta.pxHeight} (${lastAnalysisMeta.totalPixels} pixels)`,
-            `Meter per Pixel: ${lastAnalysisMeta.mpp.toFixed(3)}`,
-            '',
-            'Anomaly Summary',
-            '---------------',
-            `Total Anomalies: ${detections.length}`,
-            'By Kind:',
-            kindLines,
-            '',
-            'Anomaly Details',
-            '---------------',
-            detectionLines,
-            ''
-        ].join('\n');
-
+        const reportData = getAnalysisReportData();
+        const report = buildAnalysisTextReportContent(reportData);
         triggerAnalysisBlobDownload(report, 'text/plain;charset=utf-8', buildAnalysisExportFilename('txt'));
     } catch (err) {
         alert(err.message || 'Text report export failed.');
@@ -217,20 +230,110 @@ function exportAnalysisImage() {
 
 function exportAnalysisPDF() {
     try {
+        const reportData = getAnalysisReportData();
+        const { meta, detections, kindCounts } = reportData;
         const snapshot = getAnalysisSnapshotCanvas();
         if (!window.jspdf || !window.jspdf.jsPDF) {
             throw new Error('PDF library is not loaded.');
         }
 
         const { jsPDF } = window.jspdf;
-        const orientation = snapshot.width >= snapshot.height ? 'landscape' : 'portrait';
         const pdf = new jsPDF({
-            orientation,
+            orientation: 'portrait',
             unit: 'px',
-            format: [snapshot.width, snapshot.height]
+            format: 'a4'
         });
 
-        pdf.addImage(snapshot.toDataURL('image/png'), 'PNG', 0, 0, snapshot.width, snapshot.height, undefined, 'FAST');
+        const pageW = pdf.internal.pageSize.getWidth();
+        const pageH = pdf.internal.pageSize.getHeight();
+        const margin = 28;
+        const contentW = pageW - margin * 2;
+        let y = margin;
+
+        pdf.setTextColor(17, 24, 39);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(16);
+        pdf.text('UrbanEye Analysis Report', margin, y);
+        y += 18;
+
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(10);
+        pdf.text(`Generated: ${new Date().toISOString()}`, margin, y);
+        y += 14;
+
+        const imageMaxHeight = 240;
+        const imgScale = Math.min(contentW / snapshot.width, imageMaxHeight / snapshot.height);
+        const imgW = snapshot.width * imgScale;
+        const imgH = snapshot.height * imgScale;
+        pdf.addImage(snapshot.toDataURL('image/png'), 'PNG', margin, y, imgW, imgH, undefined, 'FAST');
+        y += imgH + 18;
+
+        const ensurePageSpace = (neededHeight = 14) => {
+            if (y + neededHeight > pageH - margin) {
+                pdf.addPage();
+                y = margin;
+            }
+        };
+
+        const drawHeading = (text) => {
+            ensurePageSpace(16);
+            pdf.setFont('helvetica', 'bold');
+            pdf.setFontSize(12);
+            pdf.text(text, margin, y);
+            y += 14;
+        };
+
+        const drawText = (text, options = {}) => {
+            const size = options.size || 10;
+            const bold = !!options.bold;
+            pdf.setFont('helvetica', bold ? 'bold' : 'normal');
+            pdf.setFontSize(size);
+
+            const wrapped = pdf.splitTextToSize(text, contentW);
+            const lineHeight = size + 3;
+            ensurePageSpace(wrapped.length * lineHeight + 2);
+            pdf.text(wrapped, margin, y);
+            y += wrapped.length * lineHeight + 2;
+        };
+
+        const kindLines = Object.keys(kindCounts).length
+            ? Object.entries(kindCounts)
+                .sort((a, b) => b[1] - a[1])
+                .map(([kind, count]) => `${kind}: ${count}`)
+            : ['None'];
+
+        drawHeading('Analyzed Data');
+        drawText(`AOI Bounds (W,S,E,N): ${meta.aoiBounds.join(', ')}`);
+        drawText(`AOI Size: ~${meta.widthMeters.toFixed(1)}m x ${meta.heightMeters.toFixed(1)}m`);
+        drawText(`Comparison Window: ${meta.yearsLabel}`);
+        drawText(`Before Range: ${meta.beforeFromStr} to ${meta.beforeToStr}`);
+        drawText(`Current Range: ${meta.pastStr} to ${meta.todayStr}`);
+        drawText(`Image Resolution: ${meta.pxWidth}x${meta.pxHeight} (${meta.totalPixels} pixels)`);
+        drawText(`Meter per Pixel: ${meta.mpp.toFixed(3)}`);
+
+        y += 6;
+        drawHeading('Anomaly Summary');
+        drawText(`Total Anomalies: ${detections.length}`);
+        drawText('By Kind:', { bold: true });
+        kindLines.forEach((line) => drawText(`- ${line}`));
+
+        y += 6;
+        drawHeading('Anomaly Details');
+        if (!detections.length) {
+            drawText('No anomalies were detected in this analysis run.');
+        } else {
+            detections.forEach((d, idx) => {
+                const typeLabel = getDetectionKind(d);
+                drawText(`${idx + 1}. ${d.id} | Type: ${typeLabel}`, { bold: true });
+                drawText(`Label: ${d.label} | Confidence: ${d.conf.toFixed(1)}% | EstArea: ~${d.pixels * 10} m2`);
+                drawText(`Coords: ${d.lat.toFixed(5)}, ${d.lng.toFixed(5)}`);
+                if (d.riskWarning) {
+                    drawText(`Risk: ${d.riskWarning}`);
+                }
+                y += 4;
+            });
+        }
+
         pdf.save(buildAnalysisExportFilename('pdf'));
     } catch (err) {
         alert(err.message || 'PDF export failed.');
