@@ -20,6 +20,140 @@ function checkStrategicRisk(lat, lng, conf) {
     return null;
 }
 
+function buildAnalysisExportFilename(ext) {
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+    return `urbaneye-analysis-${ts}.${ext}`;
+}
+
+function triggerAnalysisDownload(dataUrl, fileName) {
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+}
+
+function wrapTextLines(ctx, text, maxWidth) {
+    const words = text.trim().split(/\s+/);
+    const lines = [];
+    let current = '';
+
+    for (const word of words) {
+        const candidate = current ? `${current} ${word}` : word;
+        if (ctx.measureText(candidate).width <= maxWidth) {
+            current = candidate;
+        } else {
+            if (current) lines.push(current);
+            current = word;
+        }
+    }
+    if (current) lines.push(current);
+    return lines;
+}
+
+function getAnalysisSnapshotCanvas() {
+    const beforeCanvas = document.getElementById('c-bef');
+    const afterCanvas = document.getElementById('c-aft');
+    const maskCanvas = document.getElementById('c-msk');
+    const statusEl = document.getElementById('analysis-status-text');
+
+    if (!beforeCanvas || !afterCanvas || !maskCanvas || !statusEl) {
+        throw new Error('Run analysis before export.');
+    }
+
+    const padding = 34;
+    const gap = 20;
+    const tileHeight = 220;
+    const sourceAspect = beforeCanvas.width / Math.max(1, beforeCanvas.height);
+    const tileWidth = Math.max(210, Math.round(tileHeight * sourceAspect));
+    const canvasWidth = padding * 2 + tileWidth * 3 + gap * 2;
+    const canvasHeight = 520;
+
+    const out = document.createElement('canvas');
+    out.width = canvasWidth;
+    out.height = canvasHeight;
+    const ctx = out.getContext('2d');
+
+    ctx.fillStyle = '#060c14';
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    ctx.fillStyle = '#5eead4';
+    ctx.font = '700 28px Sora, sans-serif';
+    ctx.fillText('UrbanEye Analysis Report', padding, 52);
+
+    ctx.fillStyle = '#9fb0c9';
+    ctx.font = '500 14px Inter, sans-serif';
+    ctx.fillText(`Generated ${new Date().toLocaleString()}`, padding, 76);
+
+    const statusText = statusEl.innerText.replace(/\s+/g, ' ').trim();
+    const summaryStartY = 112;
+    const summaryBoxHeight = 70;
+    ctx.fillStyle = '#0b1628';
+    ctx.fillRect(padding, summaryStartY - 24, canvasWidth - padding * 2, summaryBoxHeight);
+    ctx.strokeStyle = '#1e293b';
+    ctx.strokeRect(padding, summaryStartY - 24, canvasWidth - padding * 2, summaryBoxHeight);
+
+    ctx.fillStyle = '#d6deea';
+    ctx.font = '500 13px Inter, sans-serif';
+    const summaryLines = wrapTextLines(ctx, statusText || 'Analysis summary unavailable.', canvasWidth - padding * 2 - 18).slice(0, 3);
+    summaryLines.forEach((line, idx) => {
+        ctx.fillText(line, padding + 10, summaryStartY + idx * 18);
+    });
+
+    const tilesY = 190;
+    const labels = ['Historical View', 'Current View', 'Optical Signatures'];
+    const tiles = [beforeCanvas, afterCanvas, maskCanvas];
+
+    tiles.forEach((tile, idx) => {
+        const x = padding + idx * (tileWidth + gap);
+        ctx.fillStyle = '#0b1220';
+        ctx.fillRect(x, tilesY - 24, tileWidth, tileHeight + 50);
+        ctx.strokeStyle = '#263245';
+        ctx.strokeRect(x, tilesY - 24, tileWidth, tileHeight + 50);
+
+        ctx.fillStyle = '#dbe4f2';
+        ctx.font = '600 13px Inter, sans-serif';
+        ctx.fillText(labels[idx], x + 10, tilesY - 8);
+
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(tile, x, tilesY, tileWidth, tileHeight);
+    });
+
+    return out;
+}
+
+function exportAnalysisImage() {
+    try {
+        const snapshot = getAnalysisSnapshotCanvas();
+        triggerAnalysisDownload(snapshot.toDataURL('image/png'), buildAnalysisExportFilename('png'));
+    } catch (err) {
+        alert(err.message || 'Image export failed.');
+    }
+}
+
+function exportAnalysisPDF() {
+    try {
+        const snapshot = getAnalysisSnapshotCanvas();
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+            throw new Error('PDF library is not loaded.');
+        }
+
+        const { jsPDF } = window.jspdf;
+        const orientation = snapshot.width >= snapshot.height ? 'landscape' : 'portrait';
+        const pdf = new jsPDF({
+            orientation,
+            unit: 'px',
+            format: [snapshot.width, snapshot.height]
+        });
+
+        pdf.addImage(snapshot.toDataURL('image/png'), 'PNG', 0, 0, snapshot.width, snapshot.height, undefined, 'FAST');
+        pdf.save(buildAnalysisExportFilename('pdf'));
+    } catch (err) {
+        alert(err.message || 'PDF export failed.');
+    }
+}
+
 /* ======================================================
    CORE AI ENGINE: OPTICAL CONSTRUCTION SIGNATURE DETECTION
 ====================================================== */
@@ -432,6 +566,8 @@ async function runRealTimeAnalysis() {
       <button class="aoi-run-btn" style="background:#3b82f6;color:#fff" onclick="toggleMapOverlay('before')">📅 ${yearsLabel}</button>
       <button class="aoi-run-btn" style="background:var(--teal);color:#111" onclick="toggleMapOverlay('after')">📡 Today</button>
       <button class="aoi-run-btn" style="background:var(--bg-card);color:var(--text-1);border:1px solid var(--border)" onclick="toggleMapOverlay('none')">🗺️ Base</button>
+            <button class="aoi-run-btn" style="background:#16a34a;color:#fff" onclick="exportAnalysisImage()">🖼 Export Image</button>
+            <button class="aoi-run-btn" style="background:#f97316;color:#111" onclick="exportAnalysisPDF()">📄 Export PDF</button>
       <div class="aoi-sep"></div>
       <button class="aoi-run-btn" style="background:var(--amber);color:#111" id="toggle-dots-btn" onclick="toggleMarkers()">👁 Hide Dots</button>
       <button class="aoi-clear-btn" onclick="clearAOI()">✕ Clear</button>
