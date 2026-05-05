@@ -14,7 +14,7 @@ from app.core.database import engine
 from app.models.database import Base
 
 BASE_DIR = Path(__file__).resolve().parents[2]
-FRONT_DIR = BASE_DIR.parent / 'Front'
+FRONT_DIR = BASE_DIR / 'Front'
 
 
 def create_app() -> FastAPI:
