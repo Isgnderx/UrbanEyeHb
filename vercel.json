@@ -16,24 +16,12 @@
             "dest": "backend/api/index.py"
         },
         {
-            "src": "/api/v1/(.*)",
+            "src": "/api/(.*)",
             "dest": "backend/api/index.py"
         },
         {
-            "src": "/config.js",
-            "dest": "/Front/config.js"
-        },
-        {
-            "src": "/styles/(.*)",
-            "dest": "/Front/styles/$1"
-        },
-        {
-            "src": "/scripts/(.*)",
-            "dest": "/Front/scripts/$1"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "/Front/index.html"
+            "src": "/api/v1/(.*)",
+            "dest": "backend/api/index.py"
         }
     ]
 }

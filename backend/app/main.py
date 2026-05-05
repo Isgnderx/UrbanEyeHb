@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -43,7 +44,7 @@ def create_app() -> FastAPI:
     app.add_api_route('/api/contact', contact_handler, methods=['POST'], tags=['compat'])
     app.add_api_route('/api/reports', reports_handler, methods=['GET'], tags=['compat'])
 
-    if FRONT_DIR.exists():
+    if FRONT_DIR.exists() and not os.getenv('VERCEL'):
         app.mount('/', StaticFiles(directory=str(FRONT_DIR), html=True), name='frontend')
 
     return app
