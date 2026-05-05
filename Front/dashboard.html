@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UrbanEye · AI Urban Intelligence Platform</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sora:wght@400;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles/main.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=streetView"></script>
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <nav id="sidebar">
+        <div class="sb-logo">
+            <div class="sb-logo-row">
+                <div class="sb-logo-icon">🛰️</div>
+                <div class="sb-logo-name">UrbanEye Core</div>
+            </div>
+            <div class="sb-logo-sub">Optical Construction Signature AI</div>
+        </div>
+        <div class="sb-live">
+            <div class="live-dot"></div>Sentinel-2 · Authenticated
+        </div>
+
+        <div class="sb-nav">
+            <div id="aoi-results-sec" style="display:none;">
+                <div class="nav-sec-lbl" style="color:var(--teal)">Analysis Results</div>
+                <div class="panel-sec" id="aoi-results-content">
+                    <!-- Results and Proof Canvases injected here -->
+                </div>
+            </div>
+
+            <div class="nav-sec-lbl">Detected Anomalies</div>
+            <div class="panel-sec" id="live-det-list">
+                <div style="color:var(--text-3);font-size:12px;text-align:center;padding:10px 0;">
+                    Draw an Inspection Area on the map to run real-time construction detection.
+                </div>
+            </div>
+
+            <div class="nav-sec-lbl" style="margin-top:10px;">Marker Legend</div>
+            <div class="panel-sec" style="font-size:11px;color:var(--text-2);line-height:1.6;">
+                <div style="display:flex;align-items:center;gap:6px;">
+                    <div style="font-size:14px;line-height:1;width:12px;text-align:center;color:var(--red);">⚠️</div>
+                    <span><b>Preservation Risk:</b> Masterplan / Heritage conflict</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+                    <div style="width:8px;height:8px;border-radius:50%;background:#3b82f6;"></div> <span><b>Blue
+                            Dot:</b> 3D Street View Available</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+                    <div style="width:8px;height:8px;border-radius:50%;background:#f59e0b;"></div> <span><b>Yellow
+                            Dot:</b> Anomaly (No 3D Model)</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+                    <div style="width:8px;height:8px;border-radius:50%;background:#10b981;"></div> <span><b>Green
+                            Dot:</b> Supervisor Verified Legal</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="sb-footer">
+            <div
+                style="padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--border);font-size:10px;color:var(--text-3);line-height:1.4;">
+                <b style="color:var(--teal)">Functional AI:</b> Scanning for chemical optical signatures of vegetation
+                loss & concrete luminance spikes.
+            </div>
+            <div class="sb-time" id="utc-time">--:--:-- UTC</div>
+            <div style="margin-top:4px;" class="proxy-info">
+                <div class="proxy-row"><span class="proxy-lbl">Auth</span><span class="proxy-val"
+                        id="auth-status">Authenticating…</span></div>
+                <div class="proxy-row"><span class="proxy-lbl">Resolution</span><span class="proxy-val"
+                        id="res-status">Crisp-Edge Upscaling</span></div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN -->
+    <div id="main">
+        <div class="topbar">
+            <div><span class="tb-breadcrumb" id="breadcrumb">UrbanEye / Map & AI Inspector</span></div>
+            <div class="tb-right">
+                <div class="tb-chip">
+                    <div class="dot"></div>Live Map View
+                </div>
+                <div class="tb-chip" id="topbar-time">--:--:-- UTC</div>
+                <div class="tb-chip warn" id="anomaly-chip">⚠ 0 Anomalies in View</div>
+            </div>
+        </div>
+
+        <div id="map-container">
+            <div id="map-loading" class="map-loading-indicator">
+                <div class="spinner"></div> Synchronizing Live Satellite Feed...
+            </div>
+            <div id="map"></div>
+
+            <div class="map-coords-bar" id="map-coords">Lat -- · Lon --</div>
+
+            <div class="map-status-bar">
+                <div class="map-status-title" id="layer-name">True Color Base</div>
+                <div class="map-status-row"><span>Source</span><span>Esri High-Res / Sentinel-2 L2A</span></div>
+                <div class="map-status-row"><span>Date</span><span id="img-date">Current</span></div>
+            </div>
+
+            <!-- AOI Inspector -->
+            <div class="aoi-toolbar">
+                <div class="aoi-btn" id="aoi-draw-btn" onclick="toggleAOI()">⬚ Draw Inspection Area</div>
+            </div>
+            <div class="aoi-hint" id="aoi-hint">Click and drag on the map to draw an inspection area</div>
+
+            <!-- Dynamic Bottom Bar with Time Travel Selector -->
+            <div class="aoi-bottom-bar" id="aoi-bottom-bar">
+                <div id="aoi-default-controls" style="display:flex;align-items:center;gap:14px;">
+                    <span class="aoi-bottom-label">⬚ AOI</span>
+                    <span class="aoi-bottom-val" id="aoi-size-val">—</span>
+                    <div class="aoi-sep"></div>
+                    <select id="time-travel-sel"
+                        style="background:var(--bg-surface); color:var(--text-1); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-size:11px; outline:none; cursor:pointer;">
+                        <option value="1" selected>vs 1 Year Ago</option>
+                        <option value="2">vs 2 Years Ago</option>
+                        <option value="3">vs 3 Years Ago</option>
+                        <option value="4">vs 4 Years Ago</option>
+                        <option value="5">vs 5 Years Ago</option>
+                        <option value="6">vs 6 Years Ago</option>
+                    </select>
+                    <button class="aoi-run-btn" onclick="runRealTimeAnalysis()">🔍 Run Signature AI</button>
+                    <button class="aoi-clear-btn" onclick="clearAOI()">✕ Clear</button>
+                </div>
+                <div id="aoi-post-controls" style="display:none;align-items:center;gap:10px;">
+                    <!-- Controls injected dynamically after analysis -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 3D Viewer Modal -->
+    <div id="modal3d">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">🌍 3D Field View <span id="modal-coords"
+                        style="color:var(--blue);font-size:12px;margin-left:10px;font-weight:400;"></span></div>
+                <button class="modal-close" onclick="close3DView()">✕</button>
+            </div>
+            <div id="viewer3d"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="config.js"></script>
+    <script src="scripts/app.js"></script>
+    <script src="scripts/map.js"></script>
+    <script src="scripts/analysis.js"></script>
+    <script src="scripts/viewer3d.js"></script>
+</body>
+
+</html>

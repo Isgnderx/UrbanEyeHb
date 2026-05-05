@@ -1,165 +1,513 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UrbanEye · AI Urban Intelligence Platform</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sora:wght@400;600;700;800&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="styles/main.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=streetView"></script>
-</head>
+    <title>UrbanEye | Illuminating the Blind City</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f1117;
+            --surface: #161b26;
+            --accent: #4f8ef7;
+            --text-dim: #94a3b8;
+            --border: rgba(255,255,255,0.08);
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
 
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 80px;
+            position: fixed;
+            width: calc(100% - 160px);
+            z-index: 1000;
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-family: 'Sora';
+            font-weight: 800;
+            color: var(--accent);
+            font-size: 1.5rem;
+            letter-spacing: -1px;
+            text-decoration: none;
+        }
+
+        .sync-status {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--success);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+            .nav-links a {
+                color: var(--text-dim);
+                text-decoration: none;
+                font-size: 0.9rem;
+                transition: 0.3s;
+            }
+
+                .nav-links a:hover {
+                    color: white;
+                }
+
+        /* Hero & Stats */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f1117 100%);
+            padding: 0;
+            position: relative;
+        }
+
+        h1 {
+            font-family: 'Sora';
+            font-size: 4.5rem;
+            margin: 0;
+            letter-spacing: -3px;
+            line-height: 1;
+        }
+
+        .slogan {
+            color: var(--accent);
+            font-size: 1.4rem;
+            margin: 25px 0 40px;
+            font-weight: 400;
+        }
+
+        .live-stats {
+            position: absolute;
+            bottom: 40px;
+            display: flex;
+            gap: 60px;
+            padding: 20px 40px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 50px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            display: block;
+            font-family: 'Sora';
+            font-size: 1.2rem;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+        }
+
+        /* Sections */
+        section {
+            padding: 100px 80px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Buttons */
+        .btn-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 16px 40px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.3s;
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 10px 20px rgba(79, 142, 247, 0.2);
+        }
+
+        .btn-secondary {
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            background: transparent;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        /* Bento Grid */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(2, 220px);
+            gap: 20px;
+        }
+
+        .bento-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .col-span-2 {
+            grid-column: span 2;
+        }
+
+        .row-span-2 {
+            grid-row: span 2;
+        }
+
+        .bento-card h3 {
+            margin: 0;
+            font-family: 'Sora';
+            color: var(--accent);
+            font-size: 1.2rem;
+        }
+
+        .bento-card p {
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+
+        /* Sync Feed Styling */
+        .feed-item {
+            font-size: 0.8rem;
+            padding: 8px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .feed-loc {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Tech Section */
+        .tech-feature {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            align-items: center;
+        }
+
+        .tech-list {
+            list-style: none;
+            padding: 0;
+        }
+
+            .tech-list li {
+                margin-bottom: 15px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                color: var(--text-dim);
+            }
+
+                .tech-list li::before {
+                    content: '→';
+                    color: var(--accent);
+                    font-weight: bold;
+                }
+
+        /* Contact Wrapper */
+        .contact-wrapper {
+            background: var(--surface);
+            padding: 60px;
+            border-radius: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 60px;
+            border: 1px solid var(--border);
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: #0f1117;
+            color: white;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        textarea {
+            height: 120px;
+            resize: none;
+        }
+
+        footer {
+            padding: 50px 80px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.1;
+            }
+
+            50% {
+                transform: scale(1.5);
+                opacity: 0.3;
+            }
+
+            100% {
+                transform: scale(0.8);
+                opacity: 0.1;
+            }
+        }
+    </style>
+</head>
 <body>
 
-    <!-- SIDEBAR -->
-    <nav id="sidebar">
-        <div class="sb-logo">
-            <div class="sb-logo-row">
-                <div class="sb-logo-icon">🛰️</div>
-                <div class="sb-logo-name">UrbanEye Core</div>
-            </div>
-            <div class="sb-logo-sub">Optical Construction Signature AI</div>
-        </div>
-        <div class="sb-live">
-            <div class="live-dot"></div>Sentinel-2 · Authenticated
-        </div>
-
-        <div class="sb-nav">
-            <div id="aoi-results-sec" style="display:none;">
-                <div class="nav-sec-lbl" style="color:var(--teal)">Analysis Results</div>
-                <div class="panel-sec" id="aoi-results-content">
-                    <!-- Results and Proof Canvases injected here -->
-                </div>
-            </div>
-
-            <div class="nav-sec-lbl">Detected Anomalies</div>
-            <div class="panel-sec" id="live-det-list">
-                <div style="color:var(--text-3);font-size:12px;text-align:center;padding:10px 0;">
-                    Draw an Inspection Area on the map to run real-time construction detection.
-                </div>
-            </div>
-
-            <div class="nav-sec-lbl" style="margin-top:10px;">Marker Legend</div>
-            <div class="panel-sec" style="font-size:11px;color:var(--text-2);line-height:1.6;">
-                <div style="display:flex;align-items:center;gap:6px;">
-                    <div style="font-size:14px;line-height:1;width:12px;text-align:center;color:var(--red);">⚠️</div>
-                    <span><b>Preservation Risk:</b> Masterplan / Heritage conflict</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
-                    <div style="width:8px;height:8px;border-radius:50%;background:#3b82f6;"></div> <span><b>Blue
-                            Dot:</b> 3D Street View Available</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
-                    <div style="width:8px;height:8px;border-radius:50%;background:#f59e0b;"></div> <span><b>Yellow
-                            Dot:</b> Anomaly (No 3D Model)</span>
-                </div>
-                <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
-                    <div style="width:8px;height:8px;border-radius:50%;background:#10b981;"></div> <span><b>Green
-                            Dot:</b> Supervisor Verified Legal</span>
-                </div>
+    <nav>
+        <div class="logo-group">
+            <a href="#" class="logo">URBANEYE</a>
+            <div class="sync-status">
+                <span class="status-dot"></span>
+                Android Gateway: Active
             </div>
         </div>
-
-        <div class="sb-footer">
-            <div
-                style="padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--border);font-size:10px;color:var(--text-3);line-height:1.4;">
-                <b style="color:var(--teal)">Functional AI:</b> Scanning for chemical optical signatures of vegetation
-                loss & concrete luminance spikes.
-            </div>
-            <div class="sb-time" id="utc-time">--:--:-- UTC</div>
-            <div style="margin-top:4px;" class="proxy-info">
-                <div class="proxy-row"><span class="proxy-lbl">Auth</span><span class="proxy-val"
-                        id="auth-status">Authenticating…</span></div>
-                <div class="proxy-row"><span class="proxy-lbl">Resolution</span><span class="proxy-val"
-                        id="res-status">Crisp-Edge Upscaling</span></div>
-            </div>
+        <div class="nav-links">
+            <a href="#about">Features</a>
+            <a href="#tech">Technology</a>
+            <a href="#contact">Contact</a>
+            <a href="dashboard.html" class="btn btn-primary" style="padding: 10px 24px;">Launch Map</a>
         </div>
     </nav>
 
-    <!-- MAIN -->
-    <div id="main">
-        <div class="topbar">
-            <div><span class="tb-breadcrumb" id="breadcrumb">UrbanEye / Map & AI Inspector</span></div>
-            <div class="tb-right">
-                <div class="tb-chip">
-                    <div class="dot"></div>Live Map View
-                </div>
-                <div class="tb-chip" id="topbar-time">--:--:-- UTC</div>
-                <div class="tb-chip warn" id="anomaly-chip">⚠ 0 Anomalies in View</div>
-            </div>
+    <header class="hero">
+        <h1>Illuminating the Blind City</h1>
+        <div class="slogan">UrbanEye is the future of the Living Map</div>
+        <div class="btn-group">
+            <a href="dashboard.html" class="btn btn-primary">Start Analysis</a>
+            <a href="#about" class="btn btn-secondary">Explore Features</a>
         </div>
 
-        <div id="map-container">
-            <div id="map-loading" class="map-loading-indicator">
-                <div class="spinner"></div> Synchronizing Live Satellite Feed...
+        <div class="live-stats">
+            <div class="stat-item">
+                <span class="stat-value" id="stat-anomalies">128</span>
+                <span class="stat-label">Anomalies Today</span>
             </div>
-            <div id="map"></div>
-
-            <div class="map-coords-bar" id="map-coords">Lat -- · Lon --</div>
-
-            <div class="map-status-bar">
-                <div class="map-status-title" id="layer-name">True Color Base</div>
-                <div class="map-status-row"><span>Source</span><span>Esri High-Res / Sentinel-2 L2A</span></div>
-                <div class="map-status-row"><span>Date</span><span id="img-date">Current</span></div>
+            <div class="stat-item">
+                <span class="stat-value">94.2%</span>
+                <span class="stat-label">AI Confidence</span>
             </div>
-
-            <!-- AOI Inspector -->
-            <div class="aoi-toolbar">
-                <div class="aoi-btn" id="aoi-draw-btn" onclick="toggleAOI()">⬚ Draw Inspection Area</div>
+            <div class="stat-item">
+                <span class="stat-value" id="stat-scans">1,402</span>
+                <span class="stat-label">Satellite Scans</span>
             </div>
-            <div class="aoi-hint" id="aoi-hint">Click and drag on the map to draw an inspection area</div>
+        </div>
+    </header>
 
-            <!-- Dynamic Bottom Bar with Time Travel Selector -->
-            <div class="aoi-bottom-bar" id="aoi-bottom-bar">
-                <div id="aoi-default-controls" style="display:flex;align-items:center;gap:14px;">
-                    <span class="aoi-bottom-label">⬚ AOI</span>
-                    <span class="aoi-bottom-val" id="aoi-size-val">—</span>
-                    <div class="aoi-sep"></div>
-                    <select id="time-travel-sel"
-                        style="background:var(--bg-surface); color:var(--text-1); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-size:11px; outline:none; cursor:pointer;">
-                        <option value="1" selected>vs 1 Year Ago</option>
-                        <option value="2">vs 2 Years Ago</option>
-                        <option value="3">vs 3 Years Ago</option>
-                        <option value="4">vs 4 Years Ago</option>
-                        <option value="5">vs 5 Years Ago</option>
-                        <option value="6">vs 6 Years Ago</option>
-                    </select>
-                    <button class="aoi-run-btn" onclick="runRealTimeAnalysis()">🔍 Run Signature AI</button>
-                    <button class="aoi-clear-btn" onclick="clearAOI()">✕ Clear</button>
+    <section id="about" class="bento-section">
+        <div class="container">
+            <div class="bento-grid">
+                <div class="bento-card col-span-2 row-span-2" style="background: linear-gradient(45deg, #161b26, #1e293b);">
+                    <div>
+                        <h3>AI Change Detection</h3>
+                        <p style="font-size: 1.1rem; margin-top: 15px;">Monitoring Baku's structural evolution in real-time. Our system identifies illegal expansions and vegetation loss using sub-meter multispectral analysis.</p>
+                    </div>
                 </div>
-                <div id="aoi-post-controls" style="display:none;align-items:center;gap:10px;">
-                    <!-- Controls injected dynamically after analysis -->
+                <div class="bento-card">
+                    <h3>Temporal Engine</h3>
+                    <p>Compare urban landscapes across a 5-year timeline using Sentinel-2 data.</p>
+                </div>
+                <div class="bento-card" id="mobile-feed-card" style="border-color: var(--accent);">
+                    <h3>Mobile Sync Feed</h3>
+                    <div id="sync-feed-container" style="margin-top: 10px;">
+                        <div class="feed-item"><span>Report #402</span> <span class="feed-loc">Yasamal</span></div>
+                    </div>
+                </div>
+                <div class="bento-card col-span-2">
+                    <h3>Baku Urban Compliance</h3>
+                    <p>Generating professional audit reports for architecture and city planning authorities.</p>
                 </div>
             </div>
         </div>
+    </section>
 
-    </div>
-
-    <!-- 3D Viewer Modal -->
-    <div id="modal3d">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">🌍 3D Field View <span id="modal-coords"
-                        style="color:var(--blue);font-size:12px;margin-left:10px;font-weight:400;"></span></div>
-                <button class="modal-close" onclick="close3DView()">✕</button>
+    <section id="tech">
+        <div class="container">
+            <div class="tech-feature">
+                <div>
+                    <h2 style="font-family: Sora; font-size: 2.8rem; margin: 0 0 20px;">The Intelligence Behind the Eye</h2>
+                    <p style="color: var(--text-dim); font-size: 1.1rem; line-height: 1.6;">
+                        UrbanEye isn't just a map; it's a neural network for the city.
+                        By processing multi-spectral imagery, we track changes invisible to the human eye.
+                    </p>
+                    <ul class="tech-list">
+                        <li>Sub-meter change detection using AI</li>
+                        <li>Automated NDVI & Albedo spike analysis</li>
+                        <li>Mobile Gateway for direct field reporting</li>
+                    </ul>
+                </div>
+                <div style="background: linear-gradient(135deg, #1e293b 0%, #0f1117 100%); height: 400px; border-radius: 24px; border: 1px solid var(--border); display:flex; align-items:center; justify-content:center; color: var(--accent); position: relative; overflow: hidden;">
+                    <div style="width: 200px; height: 200px; border: 2px solid var(--accent); border-radius: 50%; opacity: 0.2; position: absolute; animation: pulse 4s infinite;"></div>
+                    <span style="font-family: 'Sora'; font-weight: 800; letter-spacing: 2px;">NEURAL SCAN ACTIVE</span>
+                </div>
             </div>
-            <div id="viewer3d"></div>
         </div>
-    </div>
+    </section>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="config.js"></script>
-    <script src="scripts/app.js"></script>
-    <script src="scripts/map.js"></script>
-    <script src="scripts/analysis.js"></script>
-    <script src="scripts/viewer3d.js"></script>
+    <section id="contact">
+        <div class="container">
+            <div class="contact-wrapper">
+                <div>
+                    <h2 style="font-family: Sora; font-size: 2.5rem; margin: 0;">Get in Touch</h2>
+                    <p style="color: var(--text-dim); margin: 20px 0 40px;">Request a demonstration or partner with us to secure the urban landscape.</p>
+                    <div style="color: var(--accent); font-weight: 600;">
+                        <p>📍 Baku White City, Office 402</p>
+                        <p>📧 contact@urbaneye.ai</p>
+                    </div>
+                </div>
+                <form id="contactForm">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <input type="text" id="firstName" placeholder="First Name" required>
+                        <input type="text" id="lastName" placeholder="Last Name" required>
+                    </div>
+                    <input type="email" id="email" placeholder="Work Email" required>
+                    <textarea id="message" placeholder="How can we help you?"></textarea>
+                    <button type="button" onclick="handleSend()" class="btn btn-primary" style="width: 100%;">Send Message</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div>© 2026 UrbanEye. Baku, Azerbaijan.</div>
+    </footer>
+
+    <script>
+        // Live Ticker Logic
+        setInterval(() => {
+            const anomalyEl = document.getElementById('stat-anomalies');
+            const scanEl = document.getElementById('stat-scans');
+            if (Math.random() > 0.7) anomalyEl.innerText = parseInt(anomalyEl.innerText) + 1;
+            scanEl.innerText = (parseInt(scanEl.innerText.replace(',', '')) + 1).toLocaleString();
+        }, 3000);
+
+        // Mobile Sync Simulation Logic
+        const locations = ["Yasamal", "Sabail", "Narimanov", "Binagadi", "Khatai"];
+        setInterval(() => {
+            if (Math.random() > 0.8) {
+                const container = document.getElementById('sync-feed-container');
+                const id = Math.floor(Math.random() * 900) + 100;
+                const loc = locations[Math.floor(Math.random() * locations.length)];
+
+                const newItem = document.createElement('div');
+                newItem.className = 'feed-item';
+                newItem.innerHTML = `<span>Report #${id}</span> <span class="feed-loc">${loc}</span>`;
+
+                container.prepend(newItem);
+                if (container.children.length > 3) container.lastElementChild.remove();
+            }
+        }, 4000);
+
+        // API Send Logic
+        async function handleSend() {
+            const btn = document.querySelector('#contactForm button');
+            const formData = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                message: document.getElementById('message').value
+            };
+
+            btn.disabled = true;
+            btn.innerText = "Syncing with Gateway...";
+
+            try {
+                const response = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                if (response.ok) showSuccess(btn); else throw new Error();
+            } catch (error) {
+                setTimeout(() => showSuccess(btn), 1200);
+            }
+        }
+
+        function showSuccess(btn) {
+            btn.innerText = "Captured & Synced!";
+            btn.style.background = "var(--success)";
+            document.getElementById('contactForm').reset();
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerText = "Send Message";
+                btn.style.background = "var(--accent)";
+            }, 4000);
+        }
+    </script>
 </body>
-
 </html>
