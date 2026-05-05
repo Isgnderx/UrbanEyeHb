@@ -1,0 +1,44 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UrbanEye | Admin Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles/admin.css" />
+</head>
+<body>
+    <div class="dashboard-header">
+        <h1>UrbanEye Dashboard</h1>
+        <span class="status-badge">● System Live: Baku, Azerbaijan</span>
+        <p style="margin: 5px 0 0; font-size: 0.85rem; color: #7f8c8d;">Monitoring real-time urban anomalies</p>
+    </div>
+
+    <div id="map"></div>
+
+    <div id="sidebar">
+        <h2>UrbanEye Admin</h2>
+
+        <div id="stats-box">
+            <span style="font-size: 0.7rem; color: #5dade2; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Active Issues</span>
+            <span id="total-count">0</span>
+        </div>
+
+        <div style="margin-bottom: 25px;">
+            <small style="color: #7f8c8d; font-weight: 700;">FILTER BY CATEGORY:</small>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
+                <button class="filter-btn active" onclick="filterReports('All', this)">All</button>
+                <button class="filter-btn" onclick="filterReports('Traffic', this)">Traffic</button>
+                <button class="filter-btn" onclick="filterReports('Construction', this)">Construction</button>
+            </div>
+        </div>
+
+        <div id="report-list">
+            <p style="text-align: center; color: #bdc3c7; margin-top: 50px;">Loading reports...</p>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="scripts/admin.js" defer></script>
+</body>
+</html>
