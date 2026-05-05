@@ -19,9 +19,12 @@ FRONT_DIR = BASE_DIR / 'Front'
 
 
 def create_app() -> FastAPI:
-    # Only create database tables if not in Vercel (serverless environment)
-    if not os.getenv('VERCEL'):
-        Base.metadata.create_all(bind=engine)
+    try:
+        # Only create database tables if not in Vercel (serverless environment)
+        if not os.getenv('VERCEL'):
+            Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        print(f"Database initialization error: {e}")
 
     app = FastAPI(title=settings.app_name, debug=settings.app_debug)
 
@@ -37,7 +40,10 @@ def create_app() -> FastAPI:
         allow_headers=['*'],
     )
 
-    app.include_router(api_router)
+    try:
+        app.include_router(api_router)
+    except Exception as e:
+        print(f"Router inclusion error: {e}")
 
     # Backward-compatible endpoints used by the current frontend code.
     app.add_api_route('/health', health_handler, methods=['GET'], tags=['compat'])

@@ -22,6 +22,10 @@
         {
             "src": "/token",
             "dest": "backend/api/index.py"
+        },
+        {
+            "src": "/$",
+            "dest": "/Front/index.html"
         }
     ]
 }
