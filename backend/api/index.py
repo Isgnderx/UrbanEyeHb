@@ -10,13 +10,8 @@ print(f"Vercel Debug: BACKEND_DIR = {BACKEND_DIR}")
 print(f"Vercel Debug: Current dir = {os.getcwd()}")
 print(f"Vercel Debug: Python path = {sys.path}")
 
-try:
-    from app.main import app
-    print("Vercel Debug: App imported successfully")
-except ImportError as e:
-    print(f"Vercel Debug: Import error: {e}")
-    import traceback
-    traceback.print_exc()
-    raise
+# Import the app at the top level for Vercel
+from app.main import app
+print("Vercel Debug: App imported successfully")
 
 # Vercel Python runtime expects an ASGI app object named `app`.
