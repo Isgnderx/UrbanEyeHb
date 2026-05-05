@@ -9,7 +9,9 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.endpoints.health import health as health_handler
 from app.api.v1.endpoints.auth import get_token as token_handler
-from app.api.v1.router import api_router
+from app.api.v1.endpoints.auth import router as auth_router
+from app.api.v1.endpoints.copernicus import router as copernicus_router
+from app.api.v1.endpoints.home import router as home_router
 from app.core.config import settings
 
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -49,7 +51,9 @@ def create_app() -> FastAPI:
         )
 
     try:
-        app.include_router(api_router)
+        app.include_router(auth_router)
+        app.include_router(copernicus_router)
+        app.include_router(home_router)
     except Exception as e:
         print(f"Router inclusion error: {e}")
 
