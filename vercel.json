@@ -12,15 +12,15 @@
     ],
     "routes": [
         {
-            "src": "/(health|token)$",
-            "dest": "backend/api/index.py"
-        },
-        {
             "src": "/api/(.*)",
             "dest": "backend/api/index.py"
         },
         {
-            "src": "/api/v1/(.*)",
+            "src": "/health",
+            "dest": "backend/api/index.py"
+        },
+        {
+            "src": "/token",
             "dest": "backend/api/index.py"
         }
     ]

@@ -19,8 +19,9 @@ FRONT_DIR = BASE_DIR / 'Front'
 
 
 def create_app() -> FastAPI:
-    # Create database tables
-    Base.metadata.create_all(bind=engine)
+    # Only create database tables if not in Vercel (serverless environment)
+    if not os.getenv('VERCEL'):
+        Base.metadata.create_all(bind=engine)
 
     app = FastAPI(title=settings.app_name, debug=settings.app_debug)
 
@@ -44,6 +45,7 @@ def create_app() -> FastAPI:
     app.add_api_route('/api/contact', contact_handler, methods=['POST'], tags=['compat'])
     app.add_api_route('/api/reports', reports_handler, methods=['GET'], tags=['compat'])
 
+    # Don't mount static files in Vercel - they're handled by Vercel's static hosting
     if FRONT_DIR.exists() and not os.getenv('VERCEL'):
         app.mount('/', StaticFiles(directory=str(FRONT_DIR), html=True), name='frontend')
 

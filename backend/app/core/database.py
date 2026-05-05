@@ -1,10 +1,15 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import os
 
 from app.core.config import settings
 
-SQLALCHEMY_DATABASE_URL = settings.database_url or "sqlite:///./urbaneye.db"
+# Use in-memory database for Vercel serverless environment
+if os.getenv('VERCEL'):
+    SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
+else:
+    SQLALCHEMY_DATABASE_URL = settings.database_url or "sqlite:///./urbaneye.db"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
