@@ -7,24 +7,14 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.endpoints.health import health as health_handler
 from app.api.v1.endpoints.auth import get_token as token_handler
-from app.api.v1.endpoints.contact import submit_contact as contact_handler
-from app.api.v1.endpoints.reports import get_reports as reports_handler
 from app.api.v1.router import api_router
 from app.core.config import settings
-from app.core.database import engine
-from app.models.database import Base
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 FRONT_DIR = BASE_DIR / 'Front'
 
 
 def create_app() -> FastAPI:
-    try:
-        # Only create database tables if not in Vercel (serverless environment)
-        if not os.getenv('VERCEL'):
-            Base.metadata.create_all(bind=engine)
-    except Exception as e:
-        print(f"Database initialization error: {e}")
 
     app = FastAPI(title=settings.app_name, debug=settings.app_debug)
 
@@ -48,8 +38,6 @@ def create_app() -> FastAPI:
     # Backward-compatible endpoints used by the current frontend code.
     app.add_api_route('/health', health_handler, methods=['GET'], tags=['compat'])
     app.add_api_route('/token', token_handler, methods=['POST'], tags=['compat'])
-    app.add_api_route('/api/contact', contact_handler, methods=['POST'], tags=['compat'])
-    app.add_api_route('/api/reports', reports_handler, methods=['GET'], tags=['compat'])
 
     # Don't mount static files in Vercel - they're handled by Vercel's static hosting
     if FRONT_DIR.exists() and not os.getenv('VERCEL'):
