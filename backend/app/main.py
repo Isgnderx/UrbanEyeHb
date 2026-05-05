@@ -1,8 +1,10 @@
 from pathlib import Path
 import os
+import traceback
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.endpoints.health import health as health_handler
@@ -29,6 +31,22 @@ def create_app() -> FastAPI:
         allow_methods=['*'],
         allow_headers=['*'],
     )
+
+    @app.on_event('startup')
+    async def startup_debug() -> None:
+        print('Vercel Debug: CDSE_CLIENT_ID loaded:', bool(settings.cdse_client_id))
+        print('Vercel Debug: CDSE_CLIENT_SECRET loaded:', bool(settings.cdse_client_secret))
+        print('Vercel Debug: CDSE_TOKEN_URL:', settings.cdse_token_url)
+        print('Vercel Debug: CDSE_PROCESS_URL:', settings.cdse_process_url)
+        print('Vercel Debug: FRONTEND_ORIGIN:', settings.frontend_origin)
+
+    @app.exception_handler(Exception)
+    async def log_all_exceptions(request: Request, exc: Exception):
+        traceback.print_exception(type(exc), exc, exc.__traceback__)
+        return JSONResponse(
+            status_code=500,
+            content={'detail': 'Internal server error'},
+        )
 
     try:
         app.include_router(api_router)
