@@ -87,6 +87,9 @@ class CopernicusService:
         token_payload = await self.get_access_token()
         token = token_payload['access_token']
 
+        print(f"Vercel Debug: Copernicus process payload: {payload}")
+        print(f"Vercel Debug: Copernicus token: {token[:50]}...")
+
         async with httpx.AsyncClient(timeout=90) as client:
             res = await client.post(
                 settings.cdse_process_url,
@@ -97,6 +100,9 @@ class CopernicusService:
                     'Accept': 'image/png',
                 },
             )
+
+        print(f"Vercel Debug: Copernicus API response status: {res.status_code}")
+        print(f"Vercel Debug: Copernicus API response text: {res.text[:500]}")
 
         if res.status_code >= 400:
             raise HTTPException(
