@@ -66,7 +66,7 @@ If `Front/` exists in the repository root, the backend will serve it automatical
 
 - `http://localhost:8000/` serves `Front/index.html`
 - `http://localhost:8000/dashboard.html` serves `Front/dashboard.html`
-- `http://localhost:8000/admin.html` serves `Front/admin.html`
+- `http://localhost:8000/eggcellent.html` serves `Front/eggcellent.html`
 
 ## 6) Quick checks
 
