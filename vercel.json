@@ -26,6 +26,10 @@
         {
             "src": "/$",
             "dest": "/Front/index.html"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/Front/$1"
         }
     ]
 }
