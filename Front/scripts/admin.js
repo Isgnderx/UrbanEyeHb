@@ -17,9 +17,10 @@ function initAdminMap() {
 
 async function fetchUrbanReports() {
     try {
-        const response = await fetch('http://localhost:5205/api/reports');
+        const response = await fetch('/api/reports');
         if (!response.ok) throw new Error('Network response was not ok');
-        allReports = await response.json();
+        const result = await response.json();
+        allReports = result.reports || [];
         renderDashboard(allReports);
     } catch (error) {
         console.error('Error fetching reports:', error);

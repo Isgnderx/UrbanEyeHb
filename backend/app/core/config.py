@@ -21,6 +21,13 @@ class Settings(BaseSettings):
 
     frontend_origin: str = Field(default='*', alias='FRONTEND_ORIGIN')
 
+    database_url: str = Field(default='sqlite:///./urbaneye.db', alias='DATABASE_URL')
+
+    smtp_server: str = Field(default='smtp.gmail.com', alias='SMTP_SERVER')
+    smtp_port: int = Field(default=587, alias='SMTP_PORT')
+    smtp_username: str = Field(default='', alias='SMTP_USERNAME')
+    smtp_password: str = Field(default='', alias='SMTP_PASSWORD')
+
     cdse_client_id: str = Field(default='', alias='CDSE_CLIENT_ID')
     cdse_client_secret: str = Field(default='', alias='CDSE_CLIENT_SECRET')
     cdse_token_url: str = Field(

@@ -44,6 +44,8 @@ Backward-compatible (current frontend uses these):
 
 - `GET /health`
 - `POST /token`
+- `GET /api/reports`
+- `POST /api/contact`
 
 Versioned API:
 
@@ -51,6 +53,20 @@ Versioned API:
 - `POST /api/v1/auth/token`
 - `POST /api/v1/copernicus/process/image`
 - `POST /api/v1/copernicus/process`
+- `GET /api/v1/reports`
+- `POST /api/v1/contact`
+- `POST /api/v1/upload/report`
+- `POST /api/v1/satellite/process`
+- `GET /api/v1/admin/reports`
+- `GET /api/v1/admin/contacts`
+
+## 6) Static frontend hosting
+
+If `Front/` exists in the repository root, the backend will serve it automatically at the application root.
+
+- `http://localhost:8000/` serves `Front/index.html`
+- `http://localhost:8000/dashboard.html` serves `Front/dashboard.html`
+- `http://localhost:8000/admin.html` serves `Front/admin.html`
 
 ## 6) Quick checks
 
