@@ -51,9 +51,9 @@ def create_app() -> FastAPI:
         )
 
     try:
-        app.include_router(auth_router)
-        app.include_router(copernicus_router)
-        app.include_router(home_router)
+        app.include_router(auth_router, prefix='/api/v1')
+        app.include_router(copernicus_router, prefix='/api/v1')
+        app.include_router(home_router, prefix='/api/v1')
     except Exception as e:
         print(f"Router inclusion error: {e}")
 
