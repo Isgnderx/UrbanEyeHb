@@ -359,6 +359,7 @@ async function fetchProcessAPI(bounds, fromDate, toDate, pxWidth, pxHeight) {
     const payload = {
         input: {
             bounds: {
+                properties: { crs: "http://www.opengis.net/def/crs/OGC/1.3/CRS84" },
                 bbox: [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()]
             },
             data: [{

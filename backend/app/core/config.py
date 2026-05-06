@@ -35,7 +35,7 @@ class Settings(BaseSettings):
         alias='CDSE_TOKEN_URL',
     )
     cdse_process_url: str = Field(
-        default='https://sh.dataspace.copernicus.eu/api/v1/process',
+        default='https://sh.dataspace.copernicus.eu/process/v1',
         alias='CDSE_PROCESS_URL',
     )
 
